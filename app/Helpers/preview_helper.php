@@ -5,24 +5,14 @@
  * Alur:
  * 1. File PDF asli disimpan di writable/uploads/originals/ (TIDAK bisa diakses langsung dari web).
  * 2. Saat upload, N halaman pertama (default 5) di-convert menjadi gambar JPG menggunakan Imagick.
- * 3. Tiap gambar diberi watermark "INTERNAL PREVIEW ONLY" secara diagonal.
+ * 3. Tiap gambar diberi watermark "INTERNAL PREVIEW ONLY" tipis, menyebar merata (tile grid).
  * 4. Gambar hasil disimpan di writable/uploads/previews/ dan path-nya dicatat di tabel
  *    dokumen_preview_pages agar bisa ditampilkan lewat controller streaming, bukan URL langsung.
  *
- * Requirement server: ekstensi PHP Imagick + Ghostscript terinstall
- * (di XAMPP Windows: aktifkan php_imagick.dll di php.ini, install Ghostscript terpisah).
- *
- * Jika Imagick tidak tersedia, gunakan library alternatif seperti `spatie/pdf-to-image`
- * (juga bergantung pada Imagick + Ghostscript) atau layanan konversi eksternal.
+ * Requirement server: ekstensi PHP Imagick + Ghostscript terinstall.
  */
 
 if (!function_exists('generate_dokumen_preview')) {
-    /**
-     * @param string $pdfFullPath  path absolut file PDF asli
-     * @param string $outputDir    writable/uploads/previews
-     * @param int    $jumlahHalaman jumlah halaman yang di-convert (default 5)
-     * @return array daftar nama file gambar hasil convert, urut sesuai halaman
-     */
     function generate_dokumen_preview(string $pdfFullPath, string $outputDir, int $jumlahHalaman = 5): array
     {
         $hasil = [];
@@ -34,10 +24,9 @@ if (!function_exists('generate_dokumen_preview')) {
 
         try {
             $imagick = new \Imagick();
-            $imagick->setResolution(150, 150); // resolusi cukup untuk preview, tidak terlalu berat
+            $imagick->setResolution(150, 150);
 
             for ($i = 0; $i < $jumlahHalaman; $i++) {
-                // Format "path[0]" artinya ambil halaman ke-0 (index dimulai dari 0) dari PDF
                 $imagick->readImage($pdfFullPath . '[' . $i . ']');
                 $imagick->setImageFormat('jpg');
                 $imagick->setImageCompressionQuality(80);
@@ -45,7 +34,6 @@ if (!function_exists('generate_dokumen_preview')) {
                 $namaFile = bin2hex(random_bytes(12)) . '_p' . ($i + 1) . '.jpg';
                 $fullOutputPath = rtrim($outputDir, '/') . '/' . $namaFile;
 
-                // Tambahkan watermark sebelum disimpan
                 $imagick = tambah_watermark_preview($imagick);
 
                 $imagick->writeImage($fullOutputPath);
@@ -53,12 +41,10 @@ if (!function_exists('generate_dokumen_preview')) {
 
                 $hasil[] = ['halaman_ke' => $i + 1, 'file_gambar' => $namaFile];
 
-                // Re-inisialisasi imagick object untuk halaman berikutnya
                 $imagick = new \Imagick();
                 $imagick->setResolution(150, 150);
             }
         } catch (\ImagickException $e) {
-            // Biasanya terjadi jika jumlah halaman PDF < $jumlahHalaman -> berhenti lebih awal, itu wajar
             log_message('info', 'Preview generation stopped: ' . $e->getMessage());
         }
 
@@ -66,30 +52,30 @@ if (!function_exists('generate_dokumen_preview')) {
     }
 
     /**
-     * Menambahkan watermark teks "INTERNAL PREVIEW ONLY" secara diagonal & berulang (tiled)
-     * di atas gambar halaman preview.
+     * Watermark TIPIS & menyebar merata (tile grid 3x6) -- mirip watermark dokumen
+     * korporat pada umumnya, tidak menutupi teks dokumen di baliknya.
      */
     function tambah_watermark_preview(\Imagick $imagick): \Imagick
     {
         $draw = new \ImagickDraw();
-        $draw->setFillColor(new \ImagickPixel('rgba(255, 0, 0, 0.35)'));
-        $draw->setFontSize(36);
-        $draw->setFontWeight(700);
+        $draw->setFillColor(new \ImagickPixel('rgba(90, 90, 90, 0.12)')); // abu-abu, opacity 12%
+        $draw->setFontSize(16);
+        $draw->setFontWeight(400); // normal, bukan bold
         $draw->setTextAlignment(\Imagick::ALIGN_CENTER);
 
         $width  = $imagick->getImageWidth();
         $height = $imagick->getImageHeight();
+        $teks   = 'INTERNAL PREVIEW ONLY';
 
-        // Watermark diagonal berulang di beberapa titik agar sulit di-crop
-        $teks = 'INTERNAL PREVIEW ONLY';
-        $positions = [
-            [$width * 0.25, $height * 0.25],
-            [$width * 0.75, $height * 0.5],
-            [$width * 0.25, $height * 0.75],
-        ];
+        $spacingX = $width / 3;
+        $spacingY = $height / 6;
 
-        foreach ($positions as [$x, $y]) {
-            $imagick->annotateImage($draw, $x, $y, -30, $teks);
+        for ($row = 0; $row < 6; $row++) {
+            for ($col = 0; $col < 3; $col++) {
+                $x = $spacingX * $col + ($spacingX / 2);
+                $y = $spacingY * $row + ($spacingY / 2);
+                $imagick->annotateImage($draw, $x, $y, -30, $teks);
+            }
         }
 
         return $imagick;
@@ -97,9 +83,6 @@ if (!function_exists('generate_dokumen_preview')) {
 }
 
 if (!function_exists('hapus_file_dokumen')) {
-    /**
-     * Hapus file asli + seluruh file preview terkait dokumen (dipanggil saat admin hapus dokumen).
-     */
     function hapus_file_dokumen(string $fileAsli, array $filePreviewList): void
     {
         $originalPath = WRITEPATH . 'uploads/originals/' . $fileAsli;
