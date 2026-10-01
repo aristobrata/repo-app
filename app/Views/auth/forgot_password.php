@@ -18,9 +18,7 @@
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Kirim Instruksi Reset</button>
             </form>
-            <div class="text-center mt-3">
-                <a href="<?= base_url('login') ?>" class="small">Kembali ke Login</a>
-            </div>
+            <div class="text-center mt-3"><a href="<?= base_url('login') ?>" class="small">Kembali ke Login</a></div>
         </div>
     </div>
 </div>

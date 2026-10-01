@@ -2,49 +2,74 @@
 <?= $this->section('content') ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4>Innovation Hub</h4>
+    <h4>Inovasi & Knowledge Hub</h4>
     <a href="<?= base_url('inovasi/bacaan-saya') ?>" class="btn btn-outline-secondary btn-sm">📑 Daftar Bacaan Saya</a>
 </div>
 
 <form method="get" class="row g-2 mb-4">
     <div class="col-md-3">
-        <input type="text" name="divisi" class="form-control" placeholder="Divisi" value="<?= esc($filters['divisi'] ?? '') ?>">
-    </div>
-    <div class="col-md-2">
-        <input type="number" name="tahun" class="form-control" placeholder="Tahun" value="<?= esc($filters['tahun'] ?? '') ?>">
+        <input type="text" name="keyword" class="form-control" placeholder="Cari judul..." value="<?= esc($filters['keyword'] ?? '') ?>">
     </div>
     <div class="col-md-3">
-        <select name="status" class="form-select">
-            <option value="">Semua Status</option>
-            <option value="diajukan" <?= ($filters['status'] ?? '') === 'diajukan' ? 'selected' : '' ?>>Diajukan</option>
-            <option value="diverifikasi" <?= ($filters['status'] ?? '') === 'diverifikasi' ? 'selected' : '' ?>>Diverifikasi</option>
-            <option value="diterapkan" <?= ($filters['status'] ?? '') === 'diterapkan' ? 'selected' : '' ?>>Diterapkan</option>
+        <input type="text" name="divisi" class="form-control" placeholder="Divisi" value="<?= esc($filters['divisi'] ?? '') ?>">
+    </div>
+    <div class="col-md-3">
+        <select name="tipe" class="form-select">
+            <option value="">Semua Tipe</option>
+            <option value="inovasi" <?= ($filters['tipe'] ?? '') === 'inovasi' ? 'selected' : '' ?>>Inovasi</option>
+            <option value="knowledge" <?= ($filters['tipe'] ?? '') === 'knowledge' ? 'selected' : '' ?>>Knowledge</option>
         </select>
     </div>
-    <div class="col-md-2">
-        <button class="btn btn-secondary w-100">Filter</button>
-    </div>
+    <div class="col-md-3"><button class="btn btn-secondary w-100">Filter</button></div>
 </form>
 
-<div class="row">
-    <?php foreach ($inovasi as $i): ?>
-        <div class="col-md-4 mb-3">
-            <div class="card h-100">
-                <?php if (!empty($i['foto_ilustrasi'])): ?>
-                    <img src="<?= base_url('inovasi-image/' . $i['foto_ilustrasi']) ?>" class="card-img-top" style="height:160px; object-fit:cover;">
-                <?php endif; ?>
-                <div class="card-body">
-                    <span class="badge bg-info text-dark mb-2"><?= esc($i['status']) ?></span>
-                    <h6><?= esc($i['judul']) ?></h6>
-                    <p class="small text-muted">Oleh: <?= esc($i['nama_karyawan']) ?> · <?= esc($i['divisi']) ?></p>
-                    <p class="small">👍 <?= (int) $i['jumlah_like'] ?> &nbsp; 👁 <?= (int) $i['jumlah_view'] ?></p>
-                    <a href="<?= base_url('inovasi/' . $i['id']) ?>" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
-                </div>
-            </div>
-        </div>
+<div class="table-responsive">
+<table class="table table-striped table-hover align-middle">
+    <thead>
+    <tr>
+        <th>Tipe</th>
+        <th>Judul</th>
+        <th>Dibuat Oleh</th>
+        <th>Divisi</th>
+        <th>Status</th>
+        <th>👍 Like</th>
+        <th>👁 Views</th>
+        <th>Tanggal</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php if (empty($items)): ?>
+        <tr><td colspan="9" class="text-center text-muted py-4">Belum ada konten.</td></tr>
+    <?php endif; ?>
+    <?php foreach ($items as $item): ?>
+        <?php $url = $item['tipe'] === 'inovasi' ? base_url('inovasi/' . $item['id']) : base_url('pengetahuan/' . $item['id']); ?>
+        <tr>
+            <td><span class="badge bg-<?= $item['tipe'] === 'inovasi' ? 'success' : 'info' ?>"><?= $item['tipe'] === 'inovasi' ? 'Inovasi' : 'Knowledge' ?></span></td>
+            <td><a href="<?= $url ?>"><?= esc($item['judul']) ?></a></td>
+            <td><?= esc($item['nama_pembuat']) ?></td>
+            <td><?= esc($item['divisi']) ?></td>
+            <td><span class="badge bg-secondary"><?= esc($item['status']) ?></span></td>
+            <td><?= (int) $item['jumlah_like'] ?></td>
+            <td><?= (int) $item['jumlah_view'] ?></td>
+            <td class="small text-muted"><?= date('d/m/Y', strtotime($item['created_at'])) ?></td>
+            <td><a href="<?= $url ?>" class="btn btn-sm btn-outline-primary">Lihat</a></td>
+        </tr>
     <?php endforeach; ?>
+    </tbody>
+</table>
 </div>
 
-<?= $pager->links('inovasi', 'default_full') ?>
+<?php if ($totalPage > 1): ?>
+<nav>
+    <ul class="pagination">
+        <?php for ($p = 1; $p <= $totalPage; $p++): ?>
+            <li class="page-item <?= $p === $currentPage ? 'active' : '' ?>">
+                <a class="page-link" href="?page=<?= $p ?>&keyword=<?= esc($filters['keyword'] ?? '') ?>&divisi=<?= esc($filters['divisi'] ?? '') ?>&tipe=<?= esc($filters['tipe'] ?? '') ?>"><?= $p ?></a>
+            </li>
+        <?php endfor; ?>
+    </ul>
+</nav>
+<?php endif; ?>
 
 <?= $this->endSection() ?>

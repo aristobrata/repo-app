@@ -10,11 +10,9 @@
     <div class="card shadow-sm" style="width: 380px;">
         <div class="card-body p-4">
             <h5 class="card-title mb-3 text-center">Internal Digital Repository</h5>
-
             <?php if (session()->getFlashdata('error')): ?>
                 <div class="alert alert-danger py-2"><?= esc(session()->getFlashdata('error')) ?></div>
             <?php endif; ?>
-
             <form action="<?= base_url('login') ?>" method="post">
                 <?= csrf_field() ?>
                 <div class="mb-3">
@@ -27,12 +25,8 @@
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Login</button>
             </form>
-            <div class="text-center mt-3">
-                <a href="<?= base_url('forgot-password') ?>" class="small">Lupa password?</a>
-            </div>
-            <p class="text-muted small text-center mt-3 mb-0">
-                Akun karyawan dibuat oleh Admin. Hubungi Admin jika belum punya akses.
-            </p>
+            <div class="text-center mt-3"><a href="<?= base_url('forgot-password') ?>" class="small">Lupa password?</a></div>
+            <p class="text-muted small text-center mt-3 mb-0">Akun karyawan dibuat oleh Admin.</p>
         </div>
     </div>
 </div>

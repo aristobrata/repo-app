@@ -1,9 +1,6 @@
 <?php
-
 namespace App\Models;
-
 use CodeIgniter\Model;
-
 class KategoriDokumenModel extends Model
 {
     protected $table         = 'kategori_dokumen';

@@ -1,7 +1,7 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
 
-<h4 class="mb-3">Library Digital</h4>
+<h4 class="mb-3">Repository Digital</h4>
 
 <form method="get" class="row g-2 mb-4">
     <div class="col-md-3">
@@ -9,28 +9,18 @@
                value="<?= esc($filters['keyword'] ?? '') ?>" id="search-keyword" autocomplete="off">
         <div id="suggest-box" class="list-group position-absolute" style="z-index:1000;"></div>
     </div>
-    <div class="col-md-2">
-        <input type="text" name="judul" class="form-control" placeholder="Judul" value="<?= esc($filters['judul'] ?? '') ?>">
-    </div>
-    <div class="col-md-2">
-        <input type="text" name="penulis" class="form-control" placeholder="Penulis" value="<?= esc($filters['penulis'] ?? '') ?>">
-    </div>
-    <div class="col-md-1">
-        <input type="number" name="tahun" class="form-control" placeholder="Tahun" value="<?= esc($filters['tahun'] ?? '') ?>">
-    </div>
+    <div class="col-md-2"><input type="text" name="judul" class="form-control" placeholder="Judul" value="<?= esc($filters['judul'] ?? '') ?>"></div>
+    <div class="col-md-2"><input type="text" name="penulis" class="form-control" placeholder="Penulis" value="<?= esc($filters['penulis'] ?? '') ?>"></div>
+    <div class="col-md-1"><input type="number" name="tahun" class="form-control" placeholder="Tahun" value="<?= esc($filters['tahun'] ?? '') ?>"></div>
     <div class="col-md-2">
         <select name="kategori_id" class="form-select">
             <option value="">Semua Kategori</option>
             <?php foreach ($kategori as $k): ?>
-                <option value="<?= $k['id'] ?>" <?= ($filters['kategori_id'] ?? '') == $k['id'] ? 'selected' : '' ?>>
-                    <?= esc($k['nama']) ?>
-                </option>
+                <option value="<?= $k['id'] ?>" <?= ($filters['kategori_id'] ?? '') == $k['id'] ? 'selected' : '' ?>><?= esc($k['nama']) ?></option>
             <?php endforeach; ?>
         </select>
     </div>
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100">Cari</button>
-    </div>
+    <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Cari</button></div>
 </form>
 
 <div class="row">
@@ -44,14 +34,12 @@
                     <span class="badge bg-secondary mb-2"><?= esc($d['kategori_nama']) ?></span>
                     <h6 class="card-title"><?= esc($d['judul']) ?></h6>
                     <p class="card-text small text-muted mb-1"><?= esc($d['penulis']) ?> · <?= esc($d['tahun']) ?></p>
-                    <p class="card-text small"><?= esc(mb_strimwidth($d['abstrak'] ?? '', 0, 100, '...')) ?></p>
                     <a href="<?= base_url('dokumen/' . $d['id']) ?>" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
                 </div>
             </div>
         </div>
     <?php endforeach; ?>
 </div>
-
 <?= $pager->links('dokumen', 'default_full') ?>
 
 <?= $this->section('scripts') ?>
@@ -70,5 +58,4 @@ input.addEventListener('input', () => {
 });
 </script>
 <?= $this->endSection() ?>
-
 <?= $this->endSection() ?>

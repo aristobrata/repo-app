@@ -1,11 +1,9 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
-
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>Kelola Kategori Dokumen</h4>
     <a href="<?= base_url('admin/kategori/tambah') ?>" class="btn btn-primary">+ Tambah Kategori</a>
 </div>
-
 <table class="table table-striped">
     <thead><tr><th>Nama</th><th>Slug</th><th>Jumlah Dokumen</th><th>Aksi</th></tr></thead>
     <tbody>
@@ -25,5 +23,4 @@
     <?php endforeach; ?>
     </tbody>
 </table>
-
 <?= $this->endSection() ?>

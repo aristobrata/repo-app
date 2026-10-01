@@ -1,8 +1,6 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
-
 <h4 class="mb-3">Kategori: <?= esc($kategori['nama']) ?></h4>
-
 <div class="row">
     <?php foreach ($dokumen as $d): ?>
         <div class="col-md-4 mb-3">
@@ -19,7 +17,5 @@
         </div>
     <?php endforeach; ?>
 </div>
-
 <?= $pager->links('dokumen', 'default_full') ?>
-
 <?= $this->endSection() ?>

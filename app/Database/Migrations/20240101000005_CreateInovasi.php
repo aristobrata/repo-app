@@ -1,9 +1,6 @@
 <?php
-
 namespace App\Database\Migrations;
-
 use CodeIgniter\Database\Migration;
-
 class CreateInovasi extends Migration
 {
     public function up()
@@ -67,7 +64,6 @@ class CreateInovasi extends Migration
         $this->forge->addKey('id', true);
         $this->forge->createTable('innovation_views');
     }
-
     public function down()
     {
         $this->forge->dropTable('innovation_views');

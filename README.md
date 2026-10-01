@@ -1,163 +1,76 @@
-# Internal Digital Repository & Knowledge Center (CodeIgniter 4)
+# Internal Digital Repository & Knowledge Center (CodeIgniter 4) - v2.0
 
-Starter kit ini berisi **kode aplikasi (app-specific)** untuk sistem Internal Digital
-Repository & Knowledge Center: Modul Repository Digital, Innovation Hub, dan Admin &
-Control Panel — sesuai rancangan fitur yang telah dibahas.
+Starter kit kode aplikasi (bukan instalasi CI4 penuh) untuk sistem Internal Digital
+Repository & Knowledge Center. Salin/gabungkan file-file di sini ke project CI4 yang
+sudah ada (dibuat via `composer create-project codeigniter4/appstarter`).
 
-> ⚠️ **Ini BUKAN instalasi CI4 penuh.** Folder ini hanya berisi file-file yang perlu
-> Anda salin/gabungkan ke dalam project CodeIgniter 4 yang sudah ada (atau baru dibuat
-> via Composer). Framework inti CI4 (vendor/, system/, dsb) tidak disertakan karena
-> harus di-generate lewat Composer di lingkungan Anda sendiri.
+## Modul Utama
 
-## 1. Cara Instalasi
+1. **Repository Digital** (`/dokumen`) - arsip dokumen PDF dengan preview watermark terbatas
+2. **Inovasi & Knowledge Hub** (`/inovasi`) - LISTING GABUNGAN dalam satu tabel:
+   - **Inovasi**: pencapaian/karya inovatif karyawan (deskripsi masalah, solusi, dampak)
+   - **Knowledge Management**: best practice, lesson learned, tips teknis (ringkasan, konten, referensi)
+   - Keduanya tampil dalam SATU tabel dengan kolom "Tipe" pembeda, tapi detail & CRUD tetap terpisah
+     karena struktur datanya berbeda
+3. **Admin & Control Panel** (`/admin/*`) - CRUD lengkap untuk semua modul + Analytics Dashboard
 
-### a. Buat project CI4 baru (jika belum ada)
+## Instalasi
+
 ```bash
-composer create-project codeigniter4/appstarter repository-knowledge-center
-cd repository-knowledge-center
-```
-
-### b. Salin file dari starter kit ini
-Salin & timpa (merge) folder berikut ke root project CI4 Anda:
-```
-app/Config/Routes.php          -> app/Config/Routes.php   (timpa)
-app/Controllers/*              -> app/Controllers/         (gabung)
-app/Models/*                   -> app/Models/               (gabung)
-app/Filters/*                  -> app/Filters/               (gabung)
-app/Views/*                    -> app/Views/                 (gabung)
-app/Database/Migrations/*      -> app/Database/Migrations/   (gabung)
-app/Database/Seeds/*           -> app/Database/Seeds/        (gabung)
-app/Helpers/*                  -> app/Helpers/                (gabung)
-writable/uploads/*             -> writable/uploads/           (gabung, termasuk .htaccess)
-```
-
-**KHUSUS `app/Config/Filters.php`**: JANGAN ditimpa langsung. File di starter kit ini
-hanya berisi CUPLIKAN. Buka `app/Config/Filters.php` bawaan CI4 Anda, lalu tambahkan
-2 baris berikut ke dalam array `$aliases`:
-```php
-'auth'  => \App\Filters\AuthFilter::class,
-'admin' => \App\Filters\AdminFilter::class,
-```
-
-### c. Konfigurasi environment
-```bash
+composer create-project codeigniter4/appstarter nama-project
+cd nama-project
+# salin folder app/, writable/uploads/ dari starter kit ini ke sini (gabung, jangan timpa app/Config/Filters.php penuh)
 cp env.example .env
-```
-Sesuaikan `database.default.*` dengan kredensial MySQL/MariaDB Anda (XAMPP default:
-`root` tanpa password, database dibuat manual dulu lewat phpMyAdmin: buat schema
-`repository_knowledge_center`).
-
-### d. Jalankan migration & seeder
-```bash
+# edit .env: database.default.database, username, password
 php spark migrate
 php spark db:seed InitialAdminSeeder
-```
-Login pertama: `admin@perusahaan.local` / `admin12345` — **segera ganti password**
-lewat fitur reset di Admin Panel setelah login.
-
-### e. Requirement server tambahan (untuk fitur Document Preview)
-Fitur auto-split PDF → gambar preview + watermark membutuhkan:
-- Ekstensi PHP **Imagick** aktif (`php_imagick.dll` di XAMPP Windows, atau `php-imagick`
-  di Linux)
-- **Ghostscript** terinstall di server (Imagick memakai Ghostscript untuk rasterize PDF)
-
-Jika kedua hal ini tidak tersedia, upload dokumen tetap berhasil tapi kolom
-`status_preview` akan bernilai `failed` dan preview tidak akan tampil — pertimbangkan
-memakai layanan konversi eksternal sebagai alternatif jika server tidak memungkinkan
-instalasi Ghostscript.
-
-### f. Jalankan server development
-```bash
 php spark serve
 ```
-Akses di `http://localhost:8080`
 
-## 2. Struktur Modul (Ringkasan)
+Login awal: `admin@perusahaan.local` / `admin12345` -- segera ganti setelah login pertama.
 
-| Modul | Controller | Fitur Utama |
-|---|---|---|
-| Repository Digital | `RepositoryController` | Search & filter cerdas, In-Browser Viewer, kategori |
-| Innovation Hub | `InnovationController` | Direktori inovasi, like/bookmark, pengajuan inovasi |
-| Admin Panel | `Admin\DocumentManageController`, `Admin\UserManageController`, `Admin\AnalyticsController` | Upload + auto-split preview, kelola user, dashboard analitik |
+**Requirement tambahan**: ekstensi PHP Imagick + Ghostscript terinstall di server untuk
+fitur auto-split preview PDF (lihat app/Helpers/preview_helper.php).
 
-## 3. Alur Penyimpanan File (Keamanan)
+## app/Config/Filters.php
 
-```
-project-root/
-├── app/
-├── public/              <- document root web server (SATU-SATUNYA folder publicly accessible)
-│   └── index.php
-├── writable/
-│   └── uploads/
-│       ├── originals/   <- file PDF asli, TIDAK bisa diakses langsung via URL
-│       └── previews/    <- gambar hasil convert halaman preview (sudah watermark)
-```
+File di starter kit ini sudah LENGKAP (bukan cuplikan) -- berisi konfigurasi default CI4
+4.7.x ditambah 2 alias (`auth`, `admin`). Aman ditimpa langsung menggantikan file bawaan.
 
-- `writable/uploads/` berada **di luar** `public/`, sehingga web server (Apache/Nginx)
-  tidak bisa melayani request langsung ke path tersebut — satu-satunya cara mengakses
-  isinya adalah lewat controller (`RepositoryController::streamPreviewImage()`), yang
-  memastikan sesi/otorisasi user diperiksa dulu sebelum file dikirim.
-- Nama file di-hash/randomize saat upload (`$file->getRandomName()`) agar tidak mudah
-  ditebak.
-- File `.htaccess` di `writable/uploads/` ditambahkan sebagai lapisan proteksi kedua,
-  untuk berjaga-jaga jika konfigurasi virtual host keliru.
-- File PDF **full/asli** tidak pernah dikirim ke browser lewat rute preview — yang
-  dikirim hanya gambar per-halaman hasil auto-split, sehingga proteksi klik-kanan &
-  disable print di sisi client menjadi lebih berarti (karena bukan file PDF utuh yang
-  bisa di-download langsung dari DevTools).
+## Struktur Database (11 + 5 tabel)
 
-## 4. Perubahan Terbaru (v1.1)
+- `users`, `kategori_dokumen`, `dokumen`, `dokumen_preview_pages`, `document_views`
+- `inovasi`, `inovasi_lampiran`, `inovasi_like`, `inovasi_bookmark`, `innovation_views`
+- `knowledge_hub`, `knowledge_lampiran`, `knowledge_like`, `knowledge_bookmark`, `knowledge_views` (BARU)
+- `activity_logs`
 
-- **Pengajuan inovasi mandiri oleh karyawan DIHAPUS.** Aplikasi ini adalah repository/knowledge
-  center yang kontennya dikelola Admin/Super Admin — karyawan (akun dibuatkan admin) hanya bisa
-  melihat, memberi apresiasi (like), dan bookmark. Semua entri inovasi (atas nama karyawan
-  manapun) di-input lewat `/admin/inovasi`.
-- **Fitur upload sampul/cover** ditambahkan untuk Dokumen (`/admin/dokumen`) dan Inovasi
-  (`/admin/inovasi`). File disimpan di `writable/uploads/covers/` dan di-stream lewat controller
-  (`RepositoryController::streamCoverImage()` / `InnovationController::streamCoverImage()`),
-  konsisten dengan pola keamanan file lain di aplikasi ini.
-- **CRUD lengkap** ditambahkan untuk:
-  - Dokumen: `Admin\DocumentManageController::editForm()` / `update()`
-  - Kategori Dokumen (baru): `Admin\KategoriManageController` — index, create, edit, delete
-    (delete diblokir jika kategori masih dipakai dokumen)
-  - Inovasi (baru, menggantikan form pengajuan karyawan): `Admin\InnovationManageController` —
-    index, create, edit, delete, plus kelola lampiran
-  - User: `Admin\UserManageController::editForm()` / `update()` (edit profil terpisah dari reset
-    password)
-- Tidak ada migration baru yang perlu dijalankan — kolom `cover_thumbnail` (tabel `dokumen`) dan
-  `foto_ilustrasi` (tabel `inovasi`) sudah ada sejak migration awal, hanya belum dipakai.
-- Pastikan folder `writable/uploads/covers/` ada di server Anda (buat manual jika hasil merge
-  tidak menyertakannya, karena folder kosong kadang tidak ter-track oleh beberapa tool zip/git).
+## Routing Penting
 
-## 5. Akses Penuh untuk Admin/Super Admin (v1.2)
+| URL | Keterangan |
+|---|---|
+| `/inovasi` | Listing GABUNGAN Inovasi + Knowledge (tabel, bukan card) |
+| `/inovasi/{id}` | Detail Inovasi |
+| `/pengetahuan/{id}` | Detail Knowledge item |
+| `/inovasi/bacaan-saya` | Daftar bacaan gabungan (bookmark dari kedua tipe) |
+| `/admin/inovasi` | CRUD Inovasi (Admin) |
+| `/admin/knowledge` | CRUD Knowledge Hub (Admin) -- struktur sama persis dengan Inovasi |
+| `/admin/dokumen/{id}/lihat-lengkap` | Admin lihat PDF lengkap (semua halaman, tanpa watermark) |
+| `/admin/dokumen/{id}/download` | Admin download file asli |
 
-Sebelumnya, pembatasan preview (N halaman + watermark + disable klik-kanan/print) berlaku untuk
-SEMUA role, termasuk admin. Sekarang dibedakan:
+## Keamanan File & Watermark
 
-- **Karyawan (role `karyawan`)**: tetap hanya bisa akses `/dokumen/{id}/preview` — dibatasi
-  jumlah halaman, ada watermark "INTERNAL PREVIEW ONLY", klik-kanan & print dinonaktifkan.
-- **Admin/Super Admin**: mendapat 2 tombol tambahan di halaman detail dokumen (dan ikon
-  langsung di `/admin/dokumen`):
-  - **👁 Lihat Dokumen Lengkap** (`/admin/dokumen/{id}/lihat-lengkap`) — membuka file PDF ASLI
-    (bukan gambar preview) secara utuh di native PDF viewer browser, tanpa batas halaman dan
-    tanpa watermark.
-  - **⬇️ Download File Asli** (`/admin/dokumen/{id}/download`) — mengunduh file PDF asli
-    langsung ke perangkat admin.
+- File asli selalu di `writable/uploads/` (di luar `public/`, tidak bisa diakses via URL langsung)
+- Preview dokumen: watermark tipis (grid merata, abu-abu 12% opacity) + watermark dinamis
+  forensik (nama+email+waktu viewer, overlay CSS, beda tiap kali dibuka) -- lihat
+  `app/Views/repository/preview.php`
+- **Catatan jujur**: screenshot TIDAK bisa dicegah 100% lewat web (keterbatasan browser/OS).
+  Pendekatan aplikasi ini: deterrent (disable klik kanan/print/devtools) + watermark forensik
+  untuk pelacakan jika terjadi kebocoran, bukan pencegahan mutlak.
+- Admin/Super Admin punya akses tanpa batas (lihat dokumen lengkap + download), karyawan biasa
+  tetap dibatasi mode preview.
 
-Kedua endpoint ini otomatis terlindungi oleh filter `['auth', 'admin']` di `Routes.php` (grup
-`admin`), jadi karyawan biasa akan ditolak oleh `AdminFilter` sebelum sempat mengakses file
-sama sekali — bukan sekadar disembunyikan tombolnya di UI. Setiap akses juga dicatat ke
-`activity_logs` (`lihat_dokumen_lengkap` dan `unduh_dokumen`) untuk keperluan audit.
+## Dashboard
 
-## 6. Catatan Pengembangan Lanjutan
-
-- Proteksi klik-kanan/print di viewer adalah **deterrent**, bukan proteksi mutlak
-  (screenshot tetap memungkinkan) — ini sudah dijelaskan juga sebagai komentar di
-  `app/Views/repository/preview.php`.
-- Integrasi email (reset password, notifikasi) belum diimplementasi — tempat yang perlu
-  diisi ditandai `// TODO` di `AuthController` dan `Admin\UserManageController`.
-- Tambahkan `CSRF filter` global dan `rate limiting` untuk endpoint login jika akan
-  dipakai di lingkungan produksi.
-- Untuk skala dokumen yang sangat besar, pertimbangkan migrasi dari MySQL FULLTEXT ke
-  mesin pencari khusus (Meilisearch/Elasticsearch) — namun untuk kebutuhan internal
-  perusahaan skala menengah, FULLTEXT index MySQL/MariaDB sudah cukup.
+`DashboardController` menampilkan: total dokumen/inovasi/knowledge/user aktif, tabel dokumen
+terbaru, tabel konten terbaru GABUNGAN (inovasi+knowledge), dokumen populer, dan log aktivitas
+terbaru (khusus admin).
