@@ -12,6 +12,7 @@
         <a class="navbar-brand" href="<?= base_url('dashboard') ?>">Knowledge Center</a>
         <?php if (session()->get('logged_in')): ?>
         <div class="navbar-nav ms-auto d-flex flex-row gap-3">
+            <a class="nav-link text-light" href="<?= base_url('dashboard') ?>">Dashboard</a>
             <a class="nav-link text-light" href="<?= base_url('dokumen') ?>">Repository</a>
             <a class="nav-link text-light" href="<?= base_url('inovasi') ?>">Inovasi & Knowledge</a>
             <?php if (in_array(session()->get('role'), ['admin', 'super_admin'])): ?>
