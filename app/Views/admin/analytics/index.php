@@ -1,11 +1,10 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
-<h4 class="mb-4">Analytics Dashboard</h4>
+<h4 class="mb-4">Analytics Repository Dokumen</h4>
+<p class="text-muted small">Analytics untuk Inovasi & Knowledge Management ada di halaman Dashboard utama.</p>
 
 <div class="row mb-4">
     <div class="col-md-4"><div class="card text-center"><div class="card-body"><h2><?= (int) $total_dokumen ?></h2><p class="text-muted mb-0">Total Dokumen</p></div></div></div>
-    <div class="col-md-4"><div class="card text-center"><div class="card-body"><h2><?= (int) $total_inovasi ?></h2><p class="text-muted mb-0">Total Inovasi</p></div></div></div>
-    <div class="col-md-4"><div class="card text-center"><div class="card-body"><h2><?= (int) $total_knowledge ?></h2><p class="text-muted mb-0">Total Knowledge Item</p></div></div></div>
 </div>
 
 <div class="row mb-4">
@@ -13,11 +12,8 @@
     <div class="col-md-6"><h6>Tren Aktivitas Baca Dokumen (30 hari)</h6><canvas id="chartTren"></canvas></div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-4"><h6>Top 10 Dokumen</h6><ol><?php foreach ($dokumen_populer as $d): ?><li><?= esc($d['judul']) ?> — <?= (int) $d['jumlah_view'] ?> views</li><?php endforeach; ?></ol></div>
-    <div class="col-md-4"><h6>Top 10 Inovasi</h6><ol><?php foreach ($inovasi_populer as $i): ?><li><?= esc($i['judul']) ?> — <?= (int) $i['jumlah_view'] ?> views</li><?php endforeach; ?></ol></div>
-    <div class="col-md-4"><h6>Top 10 Knowledge</h6><ol><?php foreach ($knowledge_populer as $k): ?><li><?= esc($k['judul']) ?> — <?= (int) $k['jumlah_view'] ?> views</li><?php endforeach; ?></ol></div>
-</div>
+<h6>Top 10 Dokumen Paling Dilihat</h6>
+<ol><?php foreach ($dokumen_populer as $d): ?><li><?= esc($d['judul']) ?> — <?= (int) $d['jumlah_view'] ?> views</li><?php endforeach; ?></ol>
 
 <h6>Log Aktivitas Terbaru</h6>
 <table class="table table-sm">

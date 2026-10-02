@@ -1,76 +1,89 @@
-# Internal Digital Repository & Knowledge Center (CodeIgniter 4) - v2.0
+# Internal Digital Repository & Knowledge Center (CodeIgniter 4) - v3.0
 
-Starter kit kode aplikasi (bukan instalasi CI4 penuh) untuk sistem Internal Digital
-Repository & Knowledge Center. Salin/gabungkan file-file di sini ke project CI4 yang
-sudah ada (dibuat via `composer create-project codeigniter4/appstarter`).
+> **v3.0 adalah PIVOT besar**: struktur tabel Inovasi & Knowledge Management diganti total
+> agar sesuai PERSIS dengan data riil Anda (`DATABASE_INOVASI_BERSIH.xlsx` dan
+> `Database_KM_2026_Clean.xlsx`), dan Dashboard dirancang ulang sesuai
+> `Rekomendasi_UI_Dashboard_Knowledge_Management_&_Inovasi.docx`.
 
-## Modul Utama
+## WAJIB: Dependency Baru
 
-1. **Repository Digital** (`/dokumen`) - arsip dokumen PDF dengan preview watermark terbatas
-2. **Inovasi & Knowledge Hub** (`/inovasi`) - LISTING GABUNGAN dalam satu tabel:
-   - **Inovasi**: pencapaian/karya inovatif karyawan (deskripsi masalah, solusi, dampak)
-   - **Knowledge Management**: best practice, lesson learned, tips teknis (ringkasan, konten, referensi)
-   - Keduanya tampil dalam SATU tabel dengan kolom "Tipe" pembeda, tapi detail & CRUD tetap terpisah
-     karena struktur datanya berbeda
-3. **Admin & Control Panel** (`/admin/*`) - CRUD lengkap untuk semua modul + Analytics Dashboard
+Fitur import Excel butuh PhpSpreadsheet. Jalankan di project Anda:
+```bash
+composer require phpoffice/phpspreadsheet
+```
+
+## Struktur Database Baru
+
+### Modul Inovasi (2 tabel header-detail)
+Data asli 1 baris = 1 anggota tim (7.891 baris Excel = 1.903 inovasi unik), dipecah jadi:
+- **`inovasi`** (1x per inovasi): kategori_inovasi, tanggal_registrasi, nama_tim, judul_inovasi,
+  area_improvement, unit_dept/biro_area_implementasi, biaya_project, saving, opp_lost, revenue,
+  total_benefit, status_saat_ini, keterangan, hyperlink_dokumen (referensi lama),
+  **file_dokumen (NULLABLE/tidak wajib)**, cover_thumbnail, tahun
+- **`inovasi_anggota_tim`** (banyak per inovasi): nama_personil, nik, struktur_tim (Ketua/Sekretaris/Anggota), org_unit
+- `inovasi_lampiran`, `inovasi_like`, `innovation_views` (engagement ringan, tetap dipertahankan)
+
+### Modul Knowledge Management (3 tabel sesuai 3 sheet Excel)
+- **`km_aktivitas`** (fact): bulan, pillar_km, aktivitas, subactivity, judul_event, tanggal_score,
+  nik/nip/nama_peserta, direktorat/departemen/biro/org_unit/bidang, peran, poin,
+  **file_dokumen (NULLABLE/tidak wajib)**, tahun
+- **`km_karyawan`** (dim, master data karyawan)
+- **`km_rekap_karyawan`** (snapshot leaderboard: total_poin, band jabatan)
+- **`km_target`** (BARU, tidak ada di Excel): target poin tahunan untuk hitung % pencapaian
+
+**Semua kolom upload file (`file_dokumen`) di kedua modul SENGAJA NULLABLE** (validasi
+`permit_empty`, bukan `required`) -- sesuai permintaan, karena data impor Excel tidak
+menyertakan file fisik.
+
+## Fitur Import Excel
+
+| Menu Admin | Endpoint | Sheet yang dibaca | Perilaku |
+|---|---|---|---|
+| Kelola Inovasi → Import Excel | `/admin/inovasi/import` | Sheet1 | Tambah baru, skip duplikat (nama_tim+judul sama) |
+| Kelola KM → Import Excel → Aktivitas | `/admin/knowledge/import` (form 1) | fact_aktivitas_km | Tambah baru (tidak menimpa) |
+| Kelola KM → Import Excel → Karyawan | `/admin/knowledge/import` (form 2) | dim_karyawan | **Menimpa penuh** (snapshot master) |
+| Kelola KM → Import Excel → Rekap | `/admin/knowledge/import` (form 3) | rekap_karyawan | **Menimpa penuh** (snapshot leaderboard) |
+
+Import membaca kolom berdasarkan **urutan posisi** (A, B, C, ...) sesuai struktur file sumber
+Anda -- jika urutan kolom di file Excel Anda berbeda, sesuaikan index array `$r[0], $r[1], ...`
+di `Admin\InovasiManageController::import()` / `Admin\KmManageController::importAktivitas()` dst.
+
+## Dashboard (sesuai spesifikasi Word)
+
+`DashboardController` + `app/Views/dashboard.php` mengikuti layout 3-baris:
+- **Row 1 (KPI Cards)**: Total Poin KM, % Target Tahunan, Partisipasi Karyawan, Total Inovasi
+- **Row 2 (Tren & Distribusi)**: Line chart tren poin bulanan, bar chart poin per pilar KM
+- **Row 3 (Detail & Leaderboard)**: Bar chart inovasi per dept, donut keterlibatan per band,
+  tabbed leaderboard (Top Karyawan / Top Departemen)
+
+**Palet warna korporat SIG** diterapkan lewat CSS variable di `app/Views/layouts/main.php`:
+`--sig-red: #C8102E`, `--sig-dark-blue: #1E3A8A`, `--sig-gold: #D97706`, dst. Font: Inter
+(Google Fonts). Card radius 8px, border #E2E8F0, sesuai design system di dokumen Word.
+
+**Catatan**: Target poin tahunan tidak ada di file Excel sumber (hanya data aktual), jadi
+diatur manual di menu Admin → Kelola KM → Target Tahunan. Tanpa target diisi, kartu "%
+Target Tahunan" menampilkan "-".
 
 ## Instalasi
 
 ```bash
 composer create-project codeigniter4/appstarter nama-project
 cd nama-project
-# salin folder app/, writable/uploads/ dari starter kit ini ke sini (gabung, jangan timpa app/Config/Filters.php penuh)
+composer require phpoffice/phpspreadsheet
+# salin folder app/, writable/uploads/ dari starter kit ini (gabung; app/Config/Filters.php
+# sudah lengkap, aman ditimpa langsung)
 cp env.example .env
-# edit .env: database.default.database, username, password
+# edit .env sesuai kredensial database Anda
 php spark migrate
 php spark db:seed InitialAdminSeeder
 php spark serve
 ```
 
-Login awal: `admin@perusahaan.local` / `admin12345` -- segera ganti setelah login pertama.
+Login awal: `admin@perusahaan.local` / `admin12345`
 
-**Requirement tambahan**: ekstensi PHP Imagick + Ghostscript terinstall di server untuk
-fitur auto-split preview PDF (lihat app/Helpers/preview_helper.php).
+Setelah login, masuk ke **Admin Panel → Import Excel Inovasi** dan **Import Excel KM**
+untuk langsung mengunggah `DATABASE_INOVASI_BERSIH.xlsx` dan `Database_KM_2026_Clean.xlsx`
+Anda.
 
-## app/Config/Filters.php
-
-File di starter kit ini sudah LENGKAP (bukan cuplikan) -- berisi konfigurasi default CI4
-4.7.x ditambah 2 alias (`auth`, `admin`). Aman ditimpa langsung menggantikan file bawaan.
-
-## Struktur Database (11 + 5 tabel)
-
-- `users`, `kategori_dokumen`, `dokumen`, `dokumen_preview_pages`, `document_views`
-- `inovasi`, `inovasi_lampiran`, `inovasi_like`, `inovasi_bookmark`, `innovation_views`
-- `knowledge_hub`, `knowledge_lampiran`, `knowledge_like`, `knowledge_bookmark`, `knowledge_views` (BARU)
-- `activity_logs`
-
-## Routing Penting
-
-| URL | Keterangan |
-|---|---|
-| `/inovasi` | Listing GABUNGAN Inovasi + Knowledge (tabel, bukan card) |
-| `/inovasi/{id}` | Detail Inovasi |
-| `/pengetahuan/{id}` | Detail Knowledge item |
-| `/inovasi/bacaan-saya` | Daftar bacaan gabungan (bookmark dari kedua tipe) |
-| `/admin/inovasi` | CRUD Inovasi (Admin) |
-| `/admin/knowledge` | CRUD Knowledge Hub (Admin) -- struktur sama persis dengan Inovasi |
-| `/admin/dokumen/{id}/lihat-lengkap` | Admin lihat PDF lengkap (semua halaman, tanpa watermark) |
-| `/admin/dokumen/{id}/download` | Admin download file asli |
-
-## Keamanan File & Watermark
-
-- File asli selalu di `writable/uploads/` (di luar `public/`, tidak bisa diakses via URL langsung)
-- Preview dokumen: watermark tipis (grid merata, abu-abu 12% opacity) + watermark dinamis
-  forensik (nama+email+waktu viewer, overlay CSS, beda tiap kali dibuka) -- lihat
-  `app/Views/repository/preview.php`
-- **Catatan jujur**: screenshot TIDAK bisa dicegah 100% lewat web (keterbatasan browser/OS).
-  Pendekatan aplikasi ini: deterrent (disable klik kanan/print/devtools) + watermark forensik
-  untuk pelacakan jika terjadi kebocoran, bukan pencegahan mutlak.
-- Admin/Super Admin punya akses tanpa batas (lihat dokumen lengkap + download), karyawan biasa
-  tetap dibatasi mode preview.
-
-## Dashboard
-
-`DashboardController` menampilkan: total dokumen/inovasi/knowledge/user aktif, tabel dokumen
-terbaru, tabel konten terbaru GABUNGAN (inovasi+knowledge), dokumen populer, dan log aktivitas
-terbaru (khusus admin).
+## Modul yang TIDAK berubah dari versi sebelumnya
+Repository Digital (dokumen/kategori/preview watermark), Management User & Akses.

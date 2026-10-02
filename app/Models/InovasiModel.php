@@ -8,29 +8,50 @@ class InovasiModel extends Model
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $allowedFields    = [
-        'judul', 'karyawan_id', 'divisi', 'deskripsi_masalah', 'solusi_inovatif',
-        'dampak_manfaat', 'foto_ilustrasi', 'status', 'jumlah_like', 'jumlah_view',
+        'kategori_inovasi', 'tanggal_registrasi', 'nama_tim', 'judul_inovasi', 'area_improvement',
+        'unit_dept_area_implementasi', 'unit_biro_area_implementasi', 'biaya_project', 'saving',
+        'opp_lost', 'revenue', 'total_benefit', 'status_saat_ini', 'keterangan',
+        'hyperlink_dokumen', 'file_dokumen', 'cover_thumbnail', 'tahun', 'jumlah_like', 'jumlah_view',
     ];
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
-    protected $validationRules = [
-        'judul'             => 'required|min_length[5]',
-        'deskripsi_masalah' => 'required',
-        'solusi_inovatif'   => 'required',
-        'dampak_manfaat'    => 'required',
-    ];
+    protected $validationRules = ['judul_inovasi' => 'required|min_length[3]'];
 
-    public function direktori(array $filters = [])
+    public function daftar(array $filters = [])
     {
-        $builder = $this->select('inovasi.*, users.nama as nama_karyawan')
-            ->join('users', 'users.id = inovasi.karyawan_id');
-        if (!empty($filters['divisi'])) { $builder->where('inovasi.divisi', $filters['divisi']); }
-        if (!empty($filters['tahun']))  { $builder->where('YEAR(inovasi.created_at)', $filters['tahun']); }
-        if (!empty($filters['status'])) { $builder->where('inovasi.status', $filters['status']); }
-        return $builder->orderBy('inovasi.created_at', 'DESC');
+        $builder = $this;
+        if (!empty($filters['keyword']))  { $builder = $builder->like('judul_inovasi', $filters['keyword']); }
+        if (!empty($filters['kategori'])) { $builder = $builder->where('kategori_inovasi', $filters['kategori']); }
+        if (!empty($filters['tahun']))    { $builder = $builder->where('tahun', $filters['tahun']); }
+        if (!empty($filters['dept']))     { $builder = $builder->where('unit_dept_area_implementasi', $filters['dept']); }
+        return $builder->orderBy('created_at', 'DESC');
     }
 
     public function incrementView(int $id) { $this->set('jumlah_view', 'jumlah_view + 1', false)->where('id', $id)->update(); }
-    public function topDilihat(int $limit = 10) { return $this->orderBy('jumlah_view', 'DESC')->findAll($limit); }
+
+    /** Untuk dashboard: jumlah inovasi per departemen (CHT-03) */
+    public function jumlahPerDept(?string $tahun = null)
+    {
+        $b = $this->select('unit_dept_area_implementasi as dept, COUNT(id) as total')
+            ->where('unit_dept_area_implementasi IS NOT NULL');
+        if ($tahun) { $b->where('tahun', $tahun); }
+        return $b->groupBy('unit_dept_area_implementasi')->orderBy('total', 'DESC')->findAll(10);
+    }
+
+    /** Untuk dashboard: jumlah inovasi per kategori (FI, KOMET, TPP, dst) */
+    public function jumlahPerKategori(?string $tahun = null)
+    {
+        $b = $this->select('kategori_inovasi as kategori, COUNT(id) as total')->where('kategori_inovasi IS NOT NULL');
+        if ($tahun) { $b->where('tahun', $tahun); }
+        return $b->groupBy('kategori_inovasi')->orderBy('total', 'DESC')->findAll();
+    }
+
+    public function totalBenefitTahun(?string $tahun = null)
+    {
+        $b = $this->selectSum('total_benefit');
+        if ($tahun) { $b->where('tahun', $tahun); }
+        $r = $b->first();
+        return (float) ($r['total_benefit'] ?? 0);
+    }
 }

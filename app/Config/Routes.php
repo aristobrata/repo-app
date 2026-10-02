@@ -24,26 +24,14 @@ $routes->group('dokumen', ['filter' => 'auth'], static function ($routes) {
 $routes->get('preview-image/(:any)', 'RepositoryController::streamPreviewImage/$1', ['filter' => 'auth']);
 $routes->get('cover-image/(:any)', 'RepositoryController::streamCoverImage/$1', ['filter' => 'auth']);
 
-// ==================== MODUL 2: INOVASI & KNOWLEDGE HUB (GABUNG di listing) ====================
-// Listing gabungan (tabel) -- Inovasi & Knowledge Management ditampilkan bersama.
-$routes->get('inovasi', 'HubController::index', ['filter' => 'auth']);
-$routes->get('inovasi/bacaan-saya', 'HubController::bacaanSaya', ['filter' => 'auth']);
-
-// Detail & interaksi Inovasi
+// ==================== MODUL 2: INOVASI ====================
 $routes->group('inovasi', ['filter' => 'auth'], static function ($routes) {
+    $routes->get('/', 'InnovationController::index');
     $routes->get('(:num)', 'InnovationController::detail/$1');
     $routes->post('(:num)/like', 'InnovationController::like/$1');
-    $routes->post('(:num)/bookmark', 'InnovationController::bookmark/$1');
+    $routes->get('(:num)/download', 'InnovationController::downloadDokumen/$1');
 });
 $routes->get('inovasi-image/(:any)', 'InnovationController::streamCoverImage/$1', ['filter' => 'auth']);
-
-// Detail & interaksi Knowledge Management
-$routes->group('pengetahuan', ['filter' => 'auth'], static function ($routes) {
-    $routes->get('(:num)', 'KnowledgeController::detail/$1');
-    $routes->post('(:num)/like', 'KnowledgeController::like/$1');
-    $routes->post('(:num)/bookmark', 'KnowledgeController::bookmark/$1');
-});
-$routes->get('knowledge-image/(:any)', 'KnowledgeController::streamCoverImage/$1', ['filter' => 'auth']);
 
 // ==================== MODUL 3: ADMIN & CONTROL PANEL ====================
 $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($routes) {
@@ -68,23 +56,29 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->post('kategori/(:num)/update', 'Admin\KategoriManageController::update/$1');
     $routes->post('kategori/(:num)/hapus', 'Admin\KategoriManageController::destroy/$1');
 
-    // Management Inovasi
-    $routes->get('inovasi', 'Admin\InnovationManageController::index');
-    $routes->get('inovasi/tambah', 'Admin\InnovationManageController::createForm');
-    $routes->post('inovasi', 'Admin\InnovationManageController::store');
-    $routes->get('inovasi/(:num)/edit', 'Admin\InnovationManageController::editForm/$1');
-    $routes->post('inovasi/(:num)/update', 'Admin\InnovationManageController::update/$1');
-    $routes->post('inovasi/(:num)/hapus', 'Admin\InnovationManageController::destroy/$1');
-    $routes->post('inovasi/lampiran/(:num)/hapus', 'Admin\InnovationManageController::hapusLampiran/$1');
+    // Management Inovasi (CRUD + Import Excel)
+    $routes->get('inovasi', 'Admin\InovasiManageController::index');
+    $routes->get('inovasi/tambah', 'Admin\InovasiManageController::createForm');
+    $routes->post('inovasi', 'Admin\InovasiManageController::store');
+    $routes->get('inovasi/import', 'Admin\InovasiManageController::importForm');
+    $routes->post('inovasi/import', 'Admin\InovasiManageController::import');
+    $routes->get('inovasi/(:num)/edit', 'Admin\InovasiManageController::editForm/$1');
+    $routes->post('inovasi/(:num)/update', 'Admin\InovasiManageController::update/$1');
+    $routes->post('inovasi/(:num)/hapus', 'Admin\InovasiManageController::destroy/$1');
 
-    // Management Knowledge Hub
-    $routes->get('knowledge', 'Admin\KnowledgeManageController::index');
-    $routes->get('knowledge/tambah', 'Admin\KnowledgeManageController::createForm');
-    $routes->post('knowledge', 'Admin\KnowledgeManageController::store');
-    $routes->get('knowledge/(:num)/edit', 'Admin\KnowledgeManageController::editForm/$1');
-    $routes->post('knowledge/(:num)/update', 'Admin\KnowledgeManageController::update/$1');
-    $routes->post('knowledge/(:num)/hapus', 'Admin\KnowledgeManageController::destroy/$1');
-    $routes->post('knowledge/lampiran/(:num)/hapus', 'Admin\KnowledgeManageController::hapusLampiran/$1');
+    // Management Knowledge Management (CRUD + Import Excel, 3 sheet)
+    $routes->get('knowledge', 'Admin\KmManageController::index');
+    $routes->get('knowledge/tambah', 'Admin\KmManageController::createForm');
+    $routes->post('knowledge', 'Admin\KmManageController::store');
+    $routes->post('knowledge/(:num)/hapus', 'Admin\KmManageController::destroy/$1');
+    $routes->get('knowledge/karyawan', 'Admin\KmManageController::karyawan');
+    $routes->get('knowledge/rekap', 'Admin\KmManageController::rekap');
+    $routes->get('knowledge/target', 'Admin\KmManageController::target');
+    $routes->post('knowledge/target', 'Admin\KmManageController::storeTarget');
+    $routes->get('knowledge/import', 'Admin\KmManageController::importForm');
+    $routes->post('knowledge/import/aktivitas', 'Admin\KmManageController::importAktivitas');
+    $routes->post('knowledge/import/karyawan', 'Admin\KmManageController::importKaryawan');
+    $routes->post('knowledge/import/rekap', 'Admin\KmManageController::importRekap');
 
     // Management User & Akses
     $routes->get('users', 'Admin\UserManageController::index');
