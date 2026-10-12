@@ -22,5 +22,5 @@
     </tbody>
 </table>
 </div>
-<?= $pager->links('karyawan', 'default_full') ?>
+<?= $pager->links('karyawan', 'pager/custom') ?>
 <?= $this->endSection() ?>

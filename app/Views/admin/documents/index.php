@@ -27,5 +27,5 @@
     <?php endforeach; ?>
     </tbody>
 </table>
-<?= $pager->links('default', 'default_full') ?>
+<?= $pager->links('default', 'pager/custom') ?>
 <?= $this->endSection() ?>

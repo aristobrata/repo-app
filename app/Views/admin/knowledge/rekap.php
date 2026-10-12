@@ -23,5 +23,5 @@
     </tbody>
 </table>
 </div>
-<?= $pager->links('rekap', 'default_full') ?>
+<?= $pager->links('rekap', 'pager/custom') ?>
 <?= $this->endSection() ?>

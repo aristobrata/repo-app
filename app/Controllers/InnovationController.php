@@ -4,6 +4,7 @@ use App\Models\InovasiModel;
 use App\Models\InovasiAnggotaTimModel;
 use App\Models\InovasiLampiranModel;
 use App\Models\InovasiLikeModel;
+use App\Models\KmAktivitasModel;
 use App\Models\ActivityLogModel;
 
 class InnovationController extends BaseController
@@ -12,6 +13,7 @@ class InnovationController extends BaseController
     protected InovasiAnggotaTimModel $timModel;
     protected InovasiLampiranModel $lampiranModel;
     protected InovasiLikeModel $likeModel;
+    protected KmAktivitasModel $kmModel;
     protected ActivityLogModel $logModel;
 
     public function __construct()
@@ -20,15 +22,36 @@ class InnovationController extends BaseController
         $this->timModel      = new InovasiAnggotaTimModel();
         $this->lampiranModel = new InovasiLampiranModel();
         $this->likeModel     = new InovasiLikeModel();
+        $this->kmModel       = new KmAktivitasModel();
         $this->logModel      = new ActivityLogModel();
     }
 
+    /**
+     * Modul "Inovasi & KM": menampilkan dua direktori terpisah dalam satu
+     * halaman (tab) -- direktori Inovasi yang sudah ada, ditambah direktori
+     * Knowledge Management. Masing-masing punya filter & pagination sendiri
+     * (group pager 'inovasi' dan 'km') agar tidak saling bentrok.
+     */
     public function index()
     {
         $filters = $this->request->getGet(['keyword', 'kategori', 'tahun', 'dept']);
         $inovasi = $this->inovasiModel->daftar($filters)->paginate(15, 'inovasi');
+
+        $kmGet       = $this->request->getGet(['km_keyword', 'km_pillar', 'km_bulan', 'km_tahun']);
+        $kmFilters   = [
+            'keyword' => $kmGet['km_keyword'] ?? null,
+            'pillar'  => $kmGet['km_pillar'] ?? null,
+            'bulan'   => $kmGet['km_bulan'] ?? null,
+            'tahun'   => $kmGet['km_tahun'] ?? null,
+        ];
+        $kmAktivitas = $this->kmModel->daftar($kmFilters)->paginate(15, 'km');
+
+        $tab = $this->request->getGet('tab') === 'km' ? 'km' : 'inovasi';
+
         return view('innovation/index', [
-            'inovasi' => $inovasi, 'pager' => $this->inovasiModel->pager, 'filters' => $filters,
+            'inovasi'     => $inovasi, 'pager' => $this->inovasiModel->pager, 'filters' => $filters,
+            'kmAktivitas' => $kmAktivitas, 'kmPager' => $this->kmModel->pager, 'kmGet' => $kmGet,
+            'tab'         => $tab,
         ]);
     }
 

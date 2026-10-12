@@ -17,5 +17,5 @@
         </div>
     <?php endforeach; ?>
 </div>
-<?= $pager->links('dokumen', 'default_full') ?>
+<?= $pager->links('dokumen', 'pager/custom') ?>
 <?= $this->endSection() ?>

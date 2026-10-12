@@ -41,7 +41,12 @@ class KmManageController extends BaseController
 
     public function store()
     {
-        $rules = ['judul_event' => 'required', 'nama_peserta' => 'required', 'file_dokumen' => 'permit_empty|max_size[file_dokumen,10240]'];
+        $rules = [
+            'judul_event'  => 'required',
+            'nama_peserta' => 'required',
+            'file_dokumen' => 'permit_empty|max_size[file_dokumen,10240]',
+            'cover'        => 'permit_empty|max_size[cover,3072]|ext_in[cover,jpg,jpeg,png]',
+        ];
         if (!$this->validate($rules)) { return redirect()->back()->withInput()->with('errors', $this->validator->getErrors()); }
 
         $fileDokumen = null;
@@ -59,10 +64,22 @@ class KmManageController extends BaseController
             'nip' => $this->request->getPost('nip'), 'nama_peserta' => $this->request->getPost('nama_peserta'),
             'direktorat' => $this->request->getPost('direktorat'), 'departemen' => $this->request->getPost('departemen'),
             'peran' => $this->request->getPost('peran'), 'poin' => $this->request->getPost('poin') ?: 0,
-            'file_dokumen' => $fileDokumen, 'tahun' => $this->request->getPost('tahun'),
+            'file_dokumen' => $fileDokumen, 'cover' => $this->handleCoverUpload(), 'tahun' => $this->request->getPost('tahun'),
         ]);
         $this->logModel->catat(session()->get('user_id'), 'tambah_km_aktivitas', 'km_aktivitas', $id);
         return redirect()->to('/admin/knowledge')->with('success', 'Aktivitas KM berhasil ditambahkan.');
+    }
+
+    /** Upload sampul TIDAK WAJIB -- kalau kosong, modul Library akan otomatis pakai gambar placeholder */
+    private function handleCoverUpload(): ?string
+    {
+        $cover = $this->request->getFile('cover');
+        if ($cover && $cover->isValid() && !$cover->hasMoved()) {
+            $nama = $cover->getRandomName();
+            $cover->move(WRITEPATH . 'uploads/covers', $nama);
+            return $nama;
+        }
+        return null;
     }
 
     public function destroy(int $id)
@@ -205,5 +222,121 @@ class KmManageController extends BaseController
         if ($value instanceof \DateTime) { return $value->format('Y-m-d'); }
         $ts = strtotime((string) $value);
         return $ts ? date('Y-m-d', $ts) : null;
+    }
+
+    // ==================== EXPORT EXCEL ====================
+
+    /** Helper umum: tulis header + data ke sheet aktif lalu stream sebagai .xlsx */
+    private function streamXlsx(\PhpOffice\PhpSpreadsheet\Spreadsheet $spreadsheet, string $filename): void
+    {
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    private function beriJudulHeader(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, array $headers): void
+    {
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers));
+        $sheet->fromArray($headers, null, 'A1');
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('1E3A8A');
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFont()->getColor()->setRGB('FFFFFF');
+        foreach (range('A', $lastCol) as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        $sheet->freezePane('A2');
+    }
+
+    /** Export tab Aktivitas, menghormati filter aktif (keyword, pillar, bulan, tahun) */
+    public function exportAktivitas()
+    {
+        $filters   = $this->request->getGet(['keyword', 'pillar', 'bulan', 'tahun']);
+        $data      = $this->aktivitasModel->daftar($filters)->findAll();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Aktivitas KM');
+
+        $headers = [
+            'No', 'Bulan', 'Pillar KM', 'Aktivitas', 'Activity Type', 'Subactivity', 'Judul Event',
+            'Tanggal Score', 'Tanggal Create', 'Tempat', 'NIK', 'NIP', 'Nama Peserta',
+            'Direktorat', 'Departemen', 'Biro', 'Org Unit', 'Bidang', 'Peran', 'Poin',
+            'Jumlah Karyawan Bulanan', 'Poin Corporate', 'Tahun',
+        ];
+        $this->beriJudulHeader($sheet, $headers);
+
+        $row = 2;
+        foreach ($data as $i => $d) {
+            $sheet->fromArray([
+                $i + 1, $d['bulan'], $d['pillar_km'], $d['aktivitas'], $d['activity_type'], $d['subactivity'],
+                $d['judul_event'], $d['tanggal_score'], $d['tanggal_create'], $d['tempat'], $d['nik'], $d['nip'],
+                $d['nama_peserta'], $d['direktorat'], $d['departemen'], $d['biro'], $d['org_unit'], $d['bidang'],
+                $d['peran'], $d['poin'], $d['jumlah_karyawan_bulanan'], $d['poin_corporate'], $d['tahun'],
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        $this->logModel->catat(session()->get('user_id'), 'export_km_aktivitas', 'km_aktivitas', null, count($data) . ' baris');
+        $this->streamXlsx($spreadsheet, 'km_aktivitas_export_' . date('Ymd_His') . '.xlsx');
+    }
+
+    /** Export tab Master Karyawan (seluruh data, tidak difilter) */
+    public function exportKaryawan()
+    {
+        $data = $this->karyawanModel->orderBy('personnel_number', 'ASC')->findAll();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Master Karyawan');
+
+        $headers = ['No', 'Perner', 'ID Number', 'Personnel Number', 'Direktorat', 'Departemen', 'Nama Unit Kerja', 'Biro', 'Org Unit', 'Bidang'];
+        $this->beriJudulHeader($sheet, $headers);
+
+        $row = 2;
+        foreach ($data as $i => $d) {
+            $sheet->fromArray([
+                $i + 1, $d['perner'], $d['id_number'], $d['personnel_number'], $d['direktorat'],
+                $d['departemen'], $d['nama_unit_kerja'], $d['biro'], $d['org_unit'], $d['bidang'],
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        $this->logModel->catat(session()->get('user_id'), 'export_km_karyawan', 'km_karyawan', null, count($data) . ' baris');
+        $this->streamXlsx($spreadsheet, 'km_master_karyawan_export_' . date('Ymd_His') . '.xlsx');
+    }
+
+    /** Export tab Rekap/Leaderboard (seluruh data, urut poin tertinggi) */
+    public function exportRekap()
+    {
+        $data = $this->rekapModel->orderBy('total_poin', 'DESC')->findAll();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Rekap Leaderboard');
+
+        $headers = ['Rank', 'NIK', 'NIP', 'Nama', 'Departemen', 'Unit', 'Seksi', 'Total Poin', 'Band'];
+        $this->beriJudulHeader($sheet, $headers);
+
+        $row = 2;
+        foreach ($data as $i => $d) {
+            $sheet->fromArray([
+                $i + 1, $d['nik'], $d['nip'], $d['nama'], $d['departemen'], $d['unit'], $d['seksi'],
+                $d['total_poin'], $d['band'],
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        $this->logModel->catat(session()->get('user_id'), 'export_km_rekap', 'km_rekap_karyawan', null, count($data) . ' baris');
+        $this->streamXlsx($spreadsheet, 'km_rekap_leaderboard_export_' . date('Ymd_His') . '.xlsx');
     }
 }

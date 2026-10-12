@@ -11,7 +11,7 @@ class KmAktivitasModel extends Model
         'bulan', 'pillar_km', 'aktivitas', 'activity_type', 'subactivity', 'judul_event',
         'tanggal_score', 'tanggal_create', 'tempat', 'nik', 'nip', 'nama_peserta',
         'direktorat', 'departemen', 'biro', 'org_unit', 'bidang', 'peran', 'poin',
-        'jumlah_karyawan_bulanan', 'poin_corporate', 'file_dokumen', 'tahun',
+        'jumlah_karyawan_bulanan', 'poin_corporate', 'file_dokumen', 'cover', 'tahun',
     ];
     protected $useTimestamps = false; // created_at diisi manual saat import
 

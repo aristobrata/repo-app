@@ -33,9 +33,16 @@
         <div class="col-md-6 mb-3"><label class="form-label">Direktorat</label><input type="text" name="direktorat" class="form-control" value="<?= old('direktorat') ?>"></div>
         <div class="col-md-6 mb-3"><label class="form-label">Departemen</label><input type="text" name="departemen" class="form-control" value="<?= old('departemen') ?>"></div>
     </div>
-    <div class="mb-3">
-        <label class="form-label">Lampiran Materi/Dokumentasi <span class="badge bg-secondary">Tidak Wajib</span></label>
-        <input type="file" name="file_dokumen" class="form-control">
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Lampiran Materi/Dokumentasi <span class="badge bg-secondary">Tidak Wajib</span></label>
+            <input type="file" name="file_dokumen" class="form-control">
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Sampul / Cover <span class="badge bg-secondary">Tidak Wajib</span></label>
+            <input type="file" name="cover" class="form-control" accept="image/jpeg,image/png">
+            <div class="form-text">Jika dikosongkan, akan otomatis memakai gambar sampul default di modul Library.</div>
+        </div>
     </div>
     <button type="submit" class="btn btn-primary">Simpan</button>
     <a href="<?= base_url('admin/knowledge') ?>" class="btn btn-outline-secondary">Batal</a>

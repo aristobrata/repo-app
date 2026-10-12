@@ -1,9 +1,8 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
 
-<?php if (!empty($inovasi['cover_thumbnail'])): ?>
-    <img src="<?= base_url('inovasi-image/' . $inovasi['cover_thumbnail']) ?>" class="img-fluid rounded mb-3" style="max-height:280px; object-fit:cover; width:100%;">
-<?php endif; ?>
+<img src="<?= !empty($inovasi['cover_thumbnail']) ? base_url('inovasi-image/' . $inovasi['cover_thumbnail']) : base_url('assets/img/no-cover.svg') ?>"
+     class="img-fluid rounded mb-3" style="max-height:280px; object-fit:cover; width:100%; background:#E2E8F0;">
 
 <span class="badge bg-secondary mb-2"><?= esc($inovasi['kategori_inovasi']) ?></span>
 <h4><?= esc($inovasi['judul_inovasi']) ?></h4>

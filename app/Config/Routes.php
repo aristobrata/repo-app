@@ -13,16 +13,13 @@ $routes->post('forgot-password', 'AuthController::forgotPassword');
 // ==================== DASHBOARD ====================
 $routes->get('dashboard', 'DashboardController::index', ['filter' => 'auth']);
 
-// ==================== MODUL 1: REPOSITORY DIGITAL (Dokumen/Arsip) ====================
-$routes->group('dokumen', ['filter' => 'auth'], static function ($routes) {
-    $routes->get('/', 'RepositoryController::index');
-    $routes->get('suggest', 'RepositoryController::suggest');
-    $routes->get('kategori/(:segment)', 'RepositoryController::kategori/$1');
-    $routes->get('(:num)', 'RepositoryController::detail/$1');
-    $routes->get('(:num)/preview', 'RepositoryController::preview/$1');
+// ==================== MODUL 1: LIBRARY (gabungan Inovasi + Knowledge Management) ====================
+$routes->group('library', ['filter' => 'auth'], static function ($routes) {
+    $routes->get('/', 'LibraryController::index');
+    $routes->get('km/(:num)', 'LibraryController::kmDetail/$1');
+    $routes->get('km/(:num)/download', 'LibraryController::downloadKmFile/$1');
 });
-$routes->get('preview-image/(:any)', 'RepositoryController::streamPreviewImage/$1', ['filter' => 'auth']);
-$routes->get('cover-image/(:any)', 'RepositoryController::streamCoverImage/$1', ['filter' => 'auth']);
+$routes->get('library-image/(:any)', 'LibraryController::streamCoverImage/$1', ['filter' => 'auth']);
 
 // ==================== MODUL 2: INOVASI ====================
 $routes->group('inovasi', ['filter' => 'auth'], static function ($routes) {
@@ -36,26 +33,6 @@ $routes->get('inovasi-image/(:any)', 'InnovationController::streamCoverImage/$1'
 // ==================== MODUL 3: ADMIN & CONTROL PANEL ====================
 $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($routes) {
 
-    // Management Berkas (Dokumen)
-    $routes->get('dokumen', 'Admin\DocumentManageController::index');
-    $routes->get('dokumen/tambah', 'Admin\DocumentManageController::createForm');
-    $routes->post('dokumen', 'Admin\DocumentManageController::store');
-    $routes->get('dokumen/(:num)/edit', 'Admin\DocumentManageController::editForm/$1');
-    $routes->post('dokumen/(:num)/update', 'Admin\DocumentManageController::update/$1');
-    $routes->get('dokumen/(:num)/lihat-lengkap', 'Admin\DocumentManageController::viewFull/$1');
-    $routes->get('dokumen/(:num)/download', 'Admin\DocumentManageController::download/$1');
-    $routes->get('dokumen/(:num)/visibilitas', 'Admin\DocumentManageController::editVisibilitas/$1');
-    $routes->post('dokumen/halaman/(:num)/hapus', 'Admin\DocumentManageController::hapusHalamanPreview/$1');
-    $routes->post('dokumen/(:num)/hapus', 'Admin\DocumentManageController::destroy/$1');
-
-    // Management Kategori Dokumen
-    $routes->get('kategori', 'Admin\KategoriManageController::index');
-    $routes->get('kategori/tambah', 'Admin\KategoriManageController::createForm');
-    $routes->post('kategori', 'Admin\KategoriManageController::store');
-    $routes->get('kategori/(:num)/edit', 'Admin\KategoriManageController::editForm/$1');
-    $routes->post('kategori/(:num)/update', 'Admin\KategoriManageController::update/$1');
-    $routes->post('kategori/(:num)/hapus', 'Admin\KategoriManageController::destroy/$1');
-
     // Management Inovasi (CRUD + Import Excel)
     $routes->get('inovasi', 'Admin\InovasiManageController::index');
     $routes->get('inovasi/tambah', 'Admin\InovasiManageController::createForm');
@@ -65,6 +42,7 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('inovasi/(:num)/edit', 'Admin\InovasiManageController::editForm/$1');
     $routes->post('inovasi/(:num)/update', 'Admin\InovasiManageController::update/$1');
     $routes->post('inovasi/(:num)/hapus', 'Admin\InovasiManageController::destroy/$1');
+    $routes->get('inovasi/export', 'Admin\InovasiManageController::exportExcel');
 
     // Management Knowledge Management (CRUD + Import Excel, 3 sheet)
     $routes->get('knowledge', 'Admin\KmManageController::index');
@@ -79,6 +57,9 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->post('knowledge/import/aktivitas', 'Admin\KmManageController::importAktivitas');
     $routes->post('knowledge/import/karyawan', 'Admin\KmManageController::importKaryawan');
     $routes->post('knowledge/import/rekap', 'Admin\KmManageController::importRekap');
+    $routes->get('knowledge/export', 'Admin\KmManageController::exportAktivitas');
+    $routes->get('knowledge/karyawan/export', 'Admin\KmManageController::exportKaryawan');
+    $routes->get('knowledge/rekap/export', 'Admin\KmManageController::exportRekap');
 
     // Management User & Akses
     $routes->get('users', 'Admin\UserManageController::index');

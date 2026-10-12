@@ -46,5 +46,5 @@
     </tbody>
 </table>
 </div>
-<?= $pager->links('aktivitas', 'default_full') ?>
+<?= $pager->links('aktivitas', 'pager/custom') ?>
 <?= $this->endSection() ?>
