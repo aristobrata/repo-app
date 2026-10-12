@@ -7,9 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        /* Palet warna diambil dari logo PT Semen Padang (merah #D73338 & hitam/charcoal #272727) */
         :root {
-            --sig-red: #C8102E;
-            --sig-dark-blue: #1E3A8A;
+            --sig-red: #D73338;
+            --sig-red-dark: #A8262A;
+            --sig-ink: #272727;
             --sig-gold: #D97706;
             --sig-bg: #F8FAFC;
             --sig-border: #E2E8F0;
@@ -17,19 +19,42 @@
             --sig-muted: #64748B;
         }
         body { font-family: 'Inter', sans-serif; background: var(--sig-bg); color: #0F2027; }
-        .navbar { background: var(--sig-dark-blue) !important; }
+
+        /* Navbar bernuansa Semen Padang: dasar hitam/charcoal + garis aksen merah di bawah */
+        .navbar { background: var(--sig-ink) !important; border-bottom: 3px solid var(--sig-red); }
         .navbar-brand { font-weight: 700; }
-        .card { border-radius: 8px; border: 1px solid var(--sig-border); box-shadow: none; }
+        .navbar-nav .nav-link.active, .navbar-nav .nav-link:hover { color: #fff !important; }
+
+        .card { border-radius: 10px; border: 1px solid var(--sig-border); box-shadow: none; }
+
+        /* Timpa warna "primary" Bootstrap bawaan (biru) jadi merah brand di seluruh halaman */
         .btn-primary { background-color: var(--sig-red); border-color: var(--sig-red); }
-        .btn-primary:hover { background-color: #a30d25; border-color: #a30d25; }
+        .btn-primary:hover, .btn-primary:focus { background-color: var(--sig-red-dark); border-color: var(--sig-red-dark); }
+        .btn-outline-primary { color: var(--sig-red); border-color: var(--sig-red); }
+        .btn-outline-primary:hover { background-color: var(--sig-red); border-color: var(--sig-red); }
+        .bg-primary { background-color: var(--sig-red) !important; }
+        .text-primary { color: var(--sig-red) !important; }
+        .border-primary { border-color: var(--sig-red) !important; }
+        a { color: var(--sig-red); }
+        a:hover { color: var(--sig-red-dark); }
+
         .text-sig-gold { color: var(--sig-gold); }
+
+        /* Garis aksen merah tipis di atas setiap card, konsisten dengan identitas Semen Padang */
+        .card:not(.border-0) { border-top: 3px solid var(--sig-red); }
+
+        .pagination .page-item.active .page-link { background-color: var(--sig-red); border-color: var(--sig-red); }
+        .pagination .page-link { color: var(--sig-red); }
     </style>
     <?= $this->renderSection('styles') ?>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container-fluid px-4">
-        <a class="navbar-brand" href="<?= base_url('dashboard') ?>">📊 KM & Inovasi Center</a>
+        <a class="navbar-brand d-flex align-items-center gap-2" href="<?= base_url('dashboard') ?>">
+            <img src="<?= base_url('assets/img/logo-semen-padang.png') ?>" alt="Semen Padang" style="height:32px; width:auto;">
+            <span>KM & Inovasi Center</span>
+        </a>
         <?php if (session()->get('logged_in')): ?>
         <div class="navbar-nav ms-auto d-flex flex-row gap-3">
             <a class="nav-link text-light" href="<?= base_url('dashboard') ?>">Dashboard</a>

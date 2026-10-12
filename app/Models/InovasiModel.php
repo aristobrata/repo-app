@@ -54,4 +54,61 @@ class InovasiModel extends Model
         $r = $b->first();
         return (float) ($r['total_benefit'] ?? 0);
     }
+
+    /** Untuk Dashboard Summary Inovasi: jumlah inovasi dengan kategori tertentu (nilai kategori apa saja, sesuai data asli). */
+    public function hitungKategori(string $kategori, ?string $tahun = null): int
+    {
+        $b = $this->where('kategori_inovasi', $kategori);
+        if ($tahun) { $b->where('tahun', $tahun); }
+        return $b->countAllResults();
+    }
+
+    /** Untuk Dashboard Summary Inovasi: jumlah departemen/fungsi unik pengusul untuk kategori tertentu. */
+    public function cakupanDeptKategori(string $kategori, ?string $tahun = null): int
+    {
+        $b = $this->select('unit_dept_area_implementasi')->distinct()
+            ->where('kategori_inovasi', $kategori)
+            ->where('unit_dept_area_implementasi IS NOT NULL');
+        if ($tahun) { $b->where('tahun', $tahun); }
+        return $b->countAllResults();
+    }
+
+    /** Total inovasi terdaftar, opsional difilter tahun (tanpa syarat kategori tertentu). */
+    public function totalTahun(?string $tahun = null): int
+    {
+        $b = $this;
+        if ($tahun) { $b = $b->where('tahun', $tahun); }
+        return $b->countAllResults();
+    }
+
+    /** Jumlah departemen/fungsi unik pengusul inovasi, dari kategori apa pun (bukan hanya satu kategori tertentu). */
+    public function cakupanDept(?string $tahun = null): int
+    {
+        $b = $this->select('unit_dept_area_implementasi')->distinct()
+            ->where('unit_dept_area_implementasi IS NOT NULL');
+        if ($tahun) { $b->where('tahun', $tahun); }
+        return $b->countAllResults();
+    }
+
+    /**
+     * Daftar tahun yang benar-benar ada di data inovasi (bukan rentang angka
+     * tebakan), untuk dipakai sebagai pilihan dropdown filter tahun. Baris
+     * dengan tahun kosong/tidak valid (NULL, "Belum", dst -- ada di data impor
+     * lama) otomatis dibuang.
+     */
+    public function daftarTahun(): array
+    {
+        $rows = $this->select('tahun')->distinct()
+            ->where('tahun IS NOT NULL')->where('tahun !=', '')
+            ->orderBy('tahun', 'DESC')->findAll();
+
+        $out = [];
+        foreach ($rows as $r) {
+            $t = trim((string) $r['tahun']);
+            if ($t !== '' && ctype_digit($t)) {
+                $out[] = $t;
+            }
+        }
+        return $out;
+    }
 }

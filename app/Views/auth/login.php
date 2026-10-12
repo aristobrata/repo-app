@@ -4,12 +4,29 @@
     <meta charset="UTF-8">
     <title>Login - Internal Knowledge Center</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Palet warna diambil dari logo PT Semen Padang (merah #D73338 & hitam/charcoal #272727) */
+        body { background: #F8FAFC; }
+        .login-topbar { height: 6px; background: linear-gradient(90deg, #272727, #D73338); }
+        .login-logo { height: 72px; width: auto; }
+        .card { border-radius: 10px; border-top: 3px solid #D73338; }
+        .card-title { color: #272727; }
+        .btn-primary { background-color: #D73338; border-color: #D73338; }
+        .btn-primary:hover { background-color: #A8262A; border-color: #A8262A; }
+        a { color: #D73338; }
+        a:hover { color: #A8262A; }
+    </style>
 </head>
-<body class="bg-light">
-<div class="container d-flex align-items-center justify-content-center" style="min-height:100vh;">
+<body>
+<div class="login-topbar"></div>
+<div class="container d-flex align-items-center justify-content-center" style="min-height:calc(100vh - 6px);">
     <div class="card shadow-sm" style="width: 380px;">
         <div class="card-body p-4">
-            <h5 class="card-title mb-3 text-center">Internal Digital Repository</h5>
+            <div class="text-center mb-3">
+                <img src="<?= base_url('assets/img/logo-semen-padang.png') ?>" alt="Semen Padang" class="login-logo mb-2">
+                <h5 class="card-title mb-0">Internal Digital Repository</h5>
+                <p class="text-muted small mb-0">Knowledge Management &amp; Inovasi</p>
+            </div>
             <?php if (session()->getFlashdata('error')): ?>
                 <div class="alert alert-danger py-2"><?= esc(session()->getFlashdata('error')) ?></div>
             <?php endif; ?>

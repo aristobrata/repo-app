@@ -66,7 +66,7 @@
                         <div class="small" style="color:var(--sig-muted);">Target belum diatur</div>
                     <?php endif; ?>
                 </div>
-                <div class="kpi-icon">🎯</div>
+                <div class="kpi-icon"></div>
             </div>
         </div>
     </div>
