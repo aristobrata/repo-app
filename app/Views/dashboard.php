@@ -25,13 +25,16 @@
                 Cut-off Data: <?= date('d M Y') ?> &middot; Status Sistem: <span style="color:var(--sig-success);">● Active</span>
             </p>
         </div>
-        <form method="get" class="d-flex gap-2">
-            <select name="tahun" class="form-select form-select-sm" onchange="this.form.submit()">
-                <?php for ($y = date('Y'); $y >= date('Y') - 5; $y--): ?>
-                    <option value="<?= $y ?>" <?= $tahun == $y ? 'selected' : '' ?>>Tahun <?= $y ?></option>
-                <?php endfor; ?>
-            </select>
-        </form>
+        <div class="d-flex gap-2">
+            <a href="<?= base_url('dashboard/summary-inovasi') ?>" class="btn btn-sm btn-outline-primary">📊 Summary Inovasi</a>
+            <form method="get" class="d-flex gap-2">
+                <select name="tahun" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <?php for ($y = date('Y'); $y >= date('Y') - 5; $y--): ?>
+                        <option value="<?= $y ?>" <?= $tahun == $y ? 'selected' : '' ?>>Tahun <?= $y ?></option>
+                    <?php endfor; ?>
+                </select>
+            </form>
+        </div>
     </div>
 </div>
 

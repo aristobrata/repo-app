@@ -12,6 +12,7 @@ $routes->post('forgot-password', 'AuthController::forgotPassword');
 
 // ==================== DASHBOARD ====================
 $routes->get('dashboard', 'DashboardController::index', ['filter' => 'auth']);
+$routes->get('dashboard/summary-inovasi', 'DashboardController::summaryInovasi', ['filter' => 'auth']);
 
 // ==================== MODUL 1: LIBRARY (gabungan Inovasi + Knowledge Management) ====================
 $routes->group('library', ['filter' => 'auth'], static function ($routes) {

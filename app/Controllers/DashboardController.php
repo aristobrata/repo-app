@@ -73,4 +73,23 @@ class DashboardController extends BaseController
 
         return view('dashboard', $data);
     }
+
+    /**
+     * Dashboard Summary Inovasi -- halaman ringkasan terpisah (Tailwind + Chart.js)
+     * di dalam modul Dashboard yang sama, diakses lewat tombol "Summary Inovasi"
+     * pada dashboard utama.
+     */
+    public function summaryInovasi()
+    {
+        $bulanIndo = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
+            7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ];
+        $periode = $bulanIndo[(int) date('n')] . ' ' . date('Y');
+
+        return view('dashboard/summary_inovasi', [
+            'title'   => 'Summary Inovasi',
+            'periode' => $periode,
+        ]);
+    }
 }
