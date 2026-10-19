@@ -99,8 +99,86 @@ class KmManageController extends BaseController
     // ---- Tab Karyawan (master) ----
     public function karyawan()
     {
-        $karyawan = $this->karyawanModel->orderBy('personnel_number', 'ASC')->paginate(25, 'karyawan');
-        return view('admin/knowledge/karyawan', ['karyawan' => $karyawan, 'pager' => $this->karyawanModel->pager]);
+        $filters  = $this->request->getGet(['keyword', 'departemen', 'band']);
+        $karyawan = $this->karyawanModel->daftar($filters)->paginate(25, 'karyawan');
+        return view('admin/knowledge/karyawan', [
+            'karyawan'   => $karyawan,
+            'pager'      => $this->karyawanModel->pager,
+            'filters'    => $filters,
+            'departemen' => $this->karyawanModel->daftarDepartemen(),
+            'total'      => $this->karyawanModel->pager->getTotal('karyawan'),
+        ]);
+    }
+
+    /** Isi kolom Band master karyawan dari data Rekap/Leaderboard (cocokkan NIK, lalu NIP). */
+    public function sinkronBand()
+    {
+        $terisi = $this->karyawanModel->sinkronBandDariRekap();
+        $sisa   = $this->karyawanModel->where('band IS NULL')->orWhere('band', '')->countAllResults();
+        $this->logModel->catat(session()->get('user_id'), 'sinkron_band_km_karyawan', 'km_karyawan', null, "{$terisi} terisi, {$sisa} belum cocok");
+        return redirect()->to('/admin/knowledge/karyawan')->with('success', "Sinkron Band selesai: {$terisi} karyawan terisi dari Rekap/Leaderboard. {$sisa} karyawan belum punya padanan di Rekap (NIK/NIP tidak ditemukan).");
+    }
+
+    public function karyawanCreateForm()
+    {
+        return view('admin/knowledge/karyawan_form', ['karyawan' => null]);
+    }
+
+    private function karyawanDataFromPost(): array
+    {
+        return [
+            'perner'           => $this->request->getPost('perner'),
+            'id_number'        => $this->request->getPost('id_number'),
+            'personnel_number' => $this->request->getPost('personnel_number'),
+            'direktorat'       => $this->request->getPost('direktorat'),
+            'departemen'       => $this->request->getPost('departemen'),
+            'nama_unit_kerja'  => $this->request->getPost('nama_unit_kerja'),
+            'biro'             => $this->request->getPost('biro'),
+            'org_unit'         => $this->request->getPost('org_unit'),
+            'bidang'           => $this->request->getPost('bidang'),
+            'band'             => $this->request->getPost('band'),
+        ];
+    }
+
+    public function karyawanStore()
+    {
+        $rules = ['personnel_number' => 'required|min_length[3]'];
+        if (!$this->validate($rules)) { return redirect()->back()->withInput()->with('errors', $this->validator->getErrors()); }
+
+        $id = $this->karyawanModel->insert($this->karyawanDataFromPost());
+        $this->logModel->catat(session()->get('user_id'), 'tambah_km_karyawan', 'km_karyawan', $id, $this->request->getPost('personnel_number'));
+        return redirect()->to('/admin/knowledge/karyawan')->with('success', 'Karyawan berhasil ditambahkan.');
+    }
+
+    public function karyawanEditForm(int $id)
+    {
+        $karyawan = $this->karyawanModel->find($id);
+        if (!$karyawan) { throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound(); }
+        return view('admin/knowledge/karyawan_form', ['karyawan' => $karyawan]);
+    }
+
+    public function karyawanUpdate(int $id)
+    {
+        $karyawan = $this->karyawanModel->find($id);
+        if (!$karyawan) { throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound(); }
+
+        $rules = ['personnel_number' => 'required|min_length[3]'];
+        if (!$this->validate($rules)) { return redirect()->back()->withInput()->with('errors', $this->validator->getErrors()); }
+
+        $dataUpdate = $this->karyawanDataFromPost();
+        $this->karyawanModel->update($id, $dataUpdate);
+        $this->logModel->catat(session()->get('user_id'), 'edit_km_karyawan', 'km_karyawan', $id, $dataUpdate['personnel_number']);
+        return redirect()->to('/admin/knowledge/karyawan')->with('success', 'Data karyawan berhasil diperbarui.');
+    }
+
+    public function karyawanDestroy(int $id)
+    {
+        $karyawan = $this->karyawanModel->find($id);
+        if ($karyawan) {
+            $this->karyawanModel->delete($id);
+            $this->logModel->catat(session()->get('user_id'), 'hapus_km_karyawan', 'km_karyawan', $id, $karyawan['personnel_number'] ?? null);
+        }
+        return redirect()->to('/admin/knowledge/karyawan')->with('success', 'Data karyawan dihapus.');
     }
 
     // ---- Tab Rekap/Leaderboard ----
@@ -183,11 +261,13 @@ class KmManageController extends BaseController
                 'perner' => $r[0] ?: null, 'id_number' => $r[1] ?: null, 'personnel_number' => $r[2],
                 'direktorat' => $r[3] ?: null, 'departemen' => $r[4] ?: null, 'nama_unit_kerja' => $r[5] ?: null,
                 'biro' => $r[6] ?: null, 'org_unit' => $r[7] ?: null, 'bidang' => $r[8] ?: null,
+                'band' => $r[9] ?: null,
             ]);
             $jumlah++;
         }
         $this->logModel->catat(session()->get('user_id'), 'import_km_karyawan', 'km_karyawan', null, "{$jumlah} baris");
-        return redirect()->to('/admin/knowledge/karyawan')->with('success', "Import master karyawan selesai: {$jumlah} baris (data lama ditimpa).");
+        $band = $this->karyawanModel->sinkronBandDariRekap();
+        return redirect()->to('/admin/knowledge/karyawan')->with('success', "Import master karyawan selesai: {$jumlah} baris (data lama ditimpa). Band otomatis terisi dari Rekap untuk {$band} karyawan.");
     }
 
     /** Import sheet 'rekap_karyawan' -- dipakai leaderboard dashboard */
@@ -213,7 +293,8 @@ class KmManageController extends BaseController
             $jumlah++;
         }
         $this->logModel->catat(session()->get('user_id'), 'import_km_rekap', 'km_rekap_karyawan', null, "{$jumlah} baris");
-        return redirect()->to('/admin/knowledge/rekap')->with('success', "Import rekap karyawan selesai: {$jumlah} baris (data lama ditimpa).");
+        $band = $this->karyawanModel->sinkronBandDariRekap();
+        return redirect()->to('/admin/knowledge/rekap')->with('success', "Import rekap karyawan selesai: {$jumlah} baris (data lama ditimpa). Band master karyawan ikut terisi untuk {$band} karyawan.");
     }
 
     private function parseTanggal($value): ?string
@@ -290,23 +371,24 @@ class KmManageController extends BaseController
         $this->streamXlsx($spreadsheet, 'km_aktivitas_export_' . date('Ymd_His') . '.xlsx');
     }
 
-    /** Export tab Master Karyawan (seluruh data, tidak difilter) */
+    /** Export tab Master Karyawan, menghormati pencarian/filter yang sedang aktif */
     public function exportKaryawan()
     {
-        $data = $this->karyawanModel->orderBy('personnel_number', 'ASC')->findAll();
+        $filters = $this->request->getGet(['keyword', 'departemen', 'band']);
+        $data = $this->karyawanModel->daftar($filters)->findAll();
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Master Karyawan');
 
-        $headers = ['No', 'Perner', 'ID Number', 'Personnel Number', 'Direktorat', 'Departemen', 'Nama Unit Kerja', 'Biro', 'Org Unit', 'Bidang'];
+        $headers = ['No', 'Perner', 'ID Number', 'Personnel Number', 'Direktorat', 'Departemen', 'Nama Unit Kerja', 'Biro', 'Org Unit', 'Bidang', 'Band'];
         $this->beriJudulHeader($sheet, $headers);
 
         $row = 2;
         foreach ($data as $i => $d) {
             $sheet->fromArray([
                 $i + 1, $d['perner'], $d['id_number'], $d['personnel_number'], $d['direktorat'],
-                $d['departemen'], $d['nama_unit_kerja'], $d['biro'], $d['org_unit'], $d['bidang'],
+                $d['departemen'], $d['nama_unit_kerja'], $d['biro'], $d['org_unit'], $d['bidang'], $d['band'] ?? null,
             ], null, 'A' . $row);
             $row++;
         }

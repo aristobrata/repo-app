@@ -45,12 +45,29 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->post('inovasi/(:num)/hapus', 'Admin\InovasiManageController::destroy/$1');
     $routes->get('inovasi/export', 'Admin\InovasiManageController::exportExcel');
 
+    // Master Karyawan Inovasi
+    $routes->get('inovasi-karyawan', 'Admin\InovasiKaryawanManageController::index');
+    $routes->get('inovasi-karyawan/tambah', 'Admin\InovasiKaryawanManageController::createForm');
+    $routes->post('inovasi-karyawan', 'Admin\InovasiKaryawanManageController::store');
+    $routes->get('inovasi-karyawan/import', 'Admin\InovasiKaryawanManageController::importForm');
+    $routes->post('inovasi-karyawan/import', 'Admin\InovasiKaryawanManageController::import');
+    $routes->get('inovasi-karyawan/export', 'Admin\InovasiKaryawanManageController::exportExcel');
+    $routes->get('inovasi-karyawan/(:num)/edit', 'Admin\InovasiKaryawanManageController::editForm/$1');
+    $routes->post('inovasi-karyawan/(:num)/update', 'Admin\InovasiKaryawanManageController::update/$1');
+    $routes->post('inovasi-karyawan/(:num)/hapus', 'Admin\InovasiKaryawanManageController::destroy/$1');
+
     // Management Knowledge Management (CRUD + Import Excel, 3 sheet)
     $routes->get('knowledge', 'Admin\KmManageController::index');
     $routes->get('knowledge/tambah', 'Admin\KmManageController::createForm');
     $routes->post('knowledge', 'Admin\KmManageController::store');
     $routes->post('knowledge/(:num)/hapus', 'Admin\KmManageController::destroy/$1');
     $routes->get('knowledge/karyawan', 'Admin\KmManageController::karyawan');
+    $routes->post('knowledge/karyawan/sinkron-band', 'Admin\KmManageController::sinkronBand');
+    $routes->get('knowledge/karyawan/tambah', 'Admin\KmManageController::karyawanCreateForm');
+    $routes->post('knowledge/karyawan', 'Admin\KmManageController::karyawanStore');
+    $routes->get('knowledge/karyawan/(:num)/edit', 'Admin\KmManageController::karyawanEditForm/$1');
+    $routes->post('knowledge/karyawan/(:num)/update', 'Admin\KmManageController::karyawanUpdate/$1');
+    $routes->post('knowledge/karyawan/(:num)/hapus', 'Admin\KmManageController::karyawanDestroy/$1');
     $routes->get('knowledge/rekap', 'Admin\KmManageController::rekap');
     $routes->get('knowledge/target', 'Admin\KmManageController::target');
     $routes->post('knowledge/target', 'Admin\KmManageController::storeTarget');

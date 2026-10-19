@@ -211,7 +211,6 @@ $belumTerlibat = max(0, $total_karyawan - $karyawan_terlibat);
     <!-- FOOTER -->
     <footer class="flex justify-end mt-8">
         <p class="text-sm md:text-base font-extrabold uppercase tracking-wide text-ink text-right">
-            Kami Telah Berbuat Sebelum Yang Lain Memikirkannya
         </p>
     </footer>
 

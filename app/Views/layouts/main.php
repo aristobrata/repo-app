@@ -66,6 +66,7 @@
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="<?= base_url('admin/inovasi') ?>">Kelola Inovasi</a></li>
                         <li><a class="dropdown-item" href="<?= base_url('admin/inovasi/import') ?>">Import Excel Inovasi</a></li>
+                        <li><a class="dropdown-item" href="<?= base_url('admin/inovasi-karyawan') ?>">Master Karyawan Inovasi</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="<?= base_url('admin/knowledge') ?>">Kelola Aktivitas KM</a></li>
                         <li><a class="dropdown-item" href="<?= base_url('admin/knowledge/karyawan') ?>">Master Karyawan</a></li>
