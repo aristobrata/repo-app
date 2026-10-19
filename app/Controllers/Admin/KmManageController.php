@@ -184,8 +184,26 @@ class KmManageController extends BaseController
     // ---- Tab Rekap/Leaderboard ----
     public function rekap()
     {
-        $rekap = $this->rekapModel->orderBy('total_poin', 'DESC')->paginate(25, 'rekap');
-        return view('admin/knowledge/rekap', ['rekap' => $rekap, 'pager' => $this->rekapModel->pager]);
+        $filters = $this->request->getGet(['keyword', 'departemen', 'band']);
+        $perPage = 25;
+        $rekap   = $this->rekapModel->daftar($filters)->paginate($perPage, 'rekap');
+        $pager   = $this->rekapModel->pager;
+
+        // Rank sebenarnya: tanpa filter = urutan halaman (offset), dengan filter = peringkat global
+        // supaya hasil pencarian tetap menampilkan rank aslinya di leaderboard.
+        $adaFilter = (bool) array_filter($filters);
+        $awal      = (($pager->getCurrentPage('rekap') - 1) * $perPage) + 1;
+        foreach ($rekap as $i => $r) {
+            $rekap[$i]['rank'] = $adaFilter ? $this->rekapModel->peringkat($r) : $awal + $i;
+        }
+
+        return view('admin/knowledge/rekap', [
+            'rekap'      => $rekap,
+            'pager'      => $pager,
+            'filters'    => $filters,
+            'departemen' => $this->rekapModel->daftarDepartemen(),
+            'total'      => $pager->getTotal('rekap'),
+        ]);
     }
 
     // ---- Tab Target ----
@@ -400,7 +418,9 @@ class KmManageController extends BaseController
     /** Export tab Rekap/Leaderboard (seluruh data, urut poin tertinggi) */
     public function exportRekap()
     {
-        $data = $this->rekapModel->orderBy('total_poin', 'DESC')->findAll();
+        $filters = $this->request->getGet(['keyword', 'departemen', 'band']);
+        $data = $this->rekapModel->daftar($filters)->findAll();
+        $adaFilter = (bool) array_filter($filters);
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -412,7 +432,7 @@ class KmManageController extends BaseController
         $row = 2;
         foreach ($data as $i => $d) {
             $sheet->fromArray([
-                $i + 1, $d['nik'], $d['nip'], $d['nama'], $d['departemen'], $d['unit'], $d['seksi'],
+                $adaFilter ? $this->rekapModel->peringkat($d) : $i + 1, $d['nik'], $d['nip'], $d['nama'], $d['departemen'], $d['unit'], $d['seksi'],
                 $d['total_poin'], $d['band'],
             ], null, 'A' . $row);
             $row++;
