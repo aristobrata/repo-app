@@ -17,7 +17,7 @@ class UserManageController extends BaseController
 
     public function index()
     {
-        $users = $this->userModel->orderBy('created_at', 'DESC')->paginate(20);
+        $users = $this->userModel->orderBy('created_at', 'DESC')->paginate(per_page_from_request());
         return view('admin/users/index', ['users' => $users, 'pager' => $this->userModel->pager]);
     }
 

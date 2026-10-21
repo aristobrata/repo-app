@@ -35,7 +35,7 @@ class InnovationController extends BaseController
     public function index()
     {
         $filters = $this->request->getGet(['keyword', 'kategori', 'tahun', 'dept']);
-        $inovasi = $this->inovasiModel->daftar($filters)->paginate(15, 'inovasi');
+        $inovasi = $this->inovasiModel->daftar($filters)->paginate(per_page_from_request(), 'inovasi');
 
         $kmGet       = $this->request->getGet(['km_keyword', 'km_pillar', 'km_bulan', 'km_tahun']);
         $kmFilters   = [
@@ -44,7 +44,7 @@ class InnovationController extends BaseController
             'bulan'   => $kmGet['km_bulan'] ?? null,
             'tahun'   => $kmGet['km_tahun'] ?? null,
         ];
-        $kmAktivitas = $this->kmModel->daftar($kmFilters)->paginate(15, 'km');
+        $kmAktivitas = $this->kmModel->daftar($kmFilters)->paginate(per_page_from_request('km_per_page'), 'km');
 
         $tab = $this->request->getGet('tab') === 'km' ? 'km' : 'inovasi';
 

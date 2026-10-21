@@ -33,7 +33,7 @@ class KmManageController extends BaseController
     public function index()
     {
         $filters = $this->request->getGet(['keyword', 'pillar', 'bulan', 'tahun']);
-        $aktivitas = $this->aktivitasModel->daftar($filters)->paginate(25, 'aktivitas');
+        $aktivitas = $this->aktivitasModel->daftar($filters)->paginate(per_page_from_request(), 'aktivitas');
         return view('admin/knowledge/index', ['aktivitas' => $aktivitas, 'pager' => $this->aktivitasModel->pager, 'filters' => $filters]);
     }
 
@@ -100,7 +100,7 @@ class KmManageController extends BaseController
     public function karyawan()
     {
         $filters  = $this->request->getGet(['keyword', 'departemen', 'band']);
-        $karyawan = $this->karyawanModel->daftar($filters)->paginate(25, 'karyawan');
+        $karyawan = $this->karyawanModel->daftar($filters)->paginate(per_page_from_request(), 'karyawan');
         return view('admin/knowledge/karyawan', [
             'karyawan'   => $karyawan,
             'pager'      => $this->karyawanModel->pager,
@@ -185,7 +185,7 @@ class KmManageController extends BaseController
     public function rekap()
     {
         $filters = $this->request->getGet(['keyword', 'departemen', 'band']);
-        $perPage = 25;
+        $perPage = per_page_from_request();
         $rekap   = $this->rekapModel->daftar($filters)->paginate($perPage, 'rekap');
         $pager   = $this->rekapModel->pager;
 

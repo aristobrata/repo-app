@@ -19,6 +19,7 @@
 </ul>
 <p class="text-muted small">Data ini diambil dari sheet <code>dim_karyawan</code>. Import ulang akan MENIMPA seluruh data lama (snapshot master terbaru). Kolom ke-10 (setelah Bidang) dibaca sebagai <strong>Band</strong> (misal: Band II, Band III, dst) &mdash; dipakai untuk chart Participation Rate per Band di Dashboard Summary Inovasi.</p>
 <form method="get" action="<?= base_url('admin/knowledge/karyawan') ?>" class="row g-2 mb-3">
+    <input type="hidden" name="per_page" value="<?= per_page_from_request('per_page') ?>">
     <div class="col-md-4"><input type="text" name="keyword" class="form-control" placeholder="Cari nama / NIK / NIP" value="<?= esc($filters['keyword'] ?? '') ?>"></div>
     <div class="col-md-4">
         <select name="departemen" class="form-select">
@@ -43,6 +44,7 @@
     </div>
 </form>
 <p class="small text-muted"><?= number_format($total ?? 0) ?> karyawan<?= array_filter($filters ?? []) ? ' ditemukan' : '' ?>.</p>
+<?= per_page_bar('karyawan', $pager) ?>
 <div class="table-responsive">
 <table class="table table-striped table-sm">
     <thead><tr><th>NIK</th><th>NIP</th><th>Nama</th><th>Direktorat</th><th>Departemen</th><th>Unit Kerja</th><th>Bidang</th><th>Band</th><th style="width:130px">Aksi</th></tr></thead>

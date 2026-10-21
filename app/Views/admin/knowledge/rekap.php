@@ -12,6 +12,7 @@
 </ul>
 <p class="text-muted small">Data ini yang dipakai Leaderboard di Dashboard. Import ulang akan MENIMPA seluruh rekap lama.</p>
 <form method="get" action="<?= base_url('admin/knowledge/rekap') ?>" class="row g-2 mb-3">
+    <input type="hidden" name="per_page" value="<?= per_page_from_request('per_page') ?>">
     <div class="col-md-4"><input type="text" name="keyword" class="form-control" placeholder="Cari nama / NIK / NIP" value="<?= esc($filters['keyword'] ?? '') ?>"></div>
     <div class="col-md-4">
         <select name="departemen" class="form-select">
@@ -35,6 +36,7 @@
     </div>
 </form>
 <p class="small text-muted"><?= number_format($total ?? 0) ?> karyawan<?= array_filter($filters ?? []) ? ' ditemukan' : '' ?>.</p>
+<?= per_page_bar('rekap', $pager) ?>
 <div class="table-responsive">
 <table class="table table-striped table-sm">
     <thead><tr><th>Rank</th><th>NIK</th><th>Nama</th><th>Departemen</th><th>Unit</th><th>Total Poin</th><th>Band</th></tr></thead>

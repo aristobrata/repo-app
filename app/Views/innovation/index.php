@@ -17,6 +17,7 @@
     <div class="tab-pane fade <?= $tab === 'inovasi' ? 'show active' : '' ?>" id="tab-inovasi" role="tabpanel">
 
         <form method="get" class="row g-2 mb-4">
+            <input type="hidden" name="per_page" value="<?= per_page_from_request('per_page') ?>">
             <input type="hidden" name="tab" value="inovasi">
             <div class="col-md-3"><input type="text" name="keyword" class="form-control" placeholder="Cari judul inovasi..." value="<?= esc($filters['keyword'] ?? '') ?>"></div>
             <div class="col-md-3"><input type="text" name="kategori" class="form-control" placeholder="Kategori (FI, TPP, dll)" value="<?= esc($filters['kategori'] ?? '') ?>"></div>
@@ -25,6 +26,7 @@
             <div class="col-md-1"><button class="btn btn-primary w-100">Cari</button></div>
         </form>
 
+        <?= per_page_bar('inovasi', $pager) ?>
         <div class="table-responsive">
         <table class="table table-striped table-hover align-middle">
             <thead>
@@ -54,6 +56,7 @@
     <div class="tab-pane fade <?= $tab === 'km' ? 'show active' : '' ?>" id="tab-km" role="tabpanel">
 
         <form method="get" class="row g-2 mb-4">
+            <input type="hidden" name="km_per_page" value="<?= per_page_from_request('km_per_page') ?>">
             <input type="hidden" name="tab" value="km">
             <div class="col-md-3"><input type="text" name="km_keyword" class="form-control" placeholder="Cari judul event..." value="<?= esc($kmGet['km_keyword'] ?? '') ?>"></div>
             <div class="col-md-3"><input type="text" name="km_pillar" class="form-control" placeholder="Pillar KM" value="<?= esc($kmGet['km_pillar'] ?? '') ?>"></div>
@@ -62,6 +65,7 @@
             <div class="col-md-2"><button class="btn btn-primary w-100">Cari</button></div>
         </form>
 
+        <?= per_page_bar('km', $kmPager, 'km_per_page') ?>
         <div class="table-responsive">
         <table class="table table-striped table-hover align-middle">
             <thead>

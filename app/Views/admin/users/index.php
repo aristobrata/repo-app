@@ -4,6 +4,7 @@
     <h4>Kelola User</h4>
     <a href="<?= base_url('admin/users/tambah') ?>" class="btn btn-primary">+ Tambah User</a>
 </div>
+<?= per_page_bar('default', $pager) ?>
 <table class="table table-striped">
     <thead><tr><th>Nama</th><th>Email</th><th>Divisi</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead>
     <tbody>

@@ -6,7 +6,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
 class BaseController extends Controller
 {
-    protected $helpers = ['url', 'form', 'preview'];
+    protected $helpers = ['url', 'form', 'preview', 'pagination'];
     protected $session;
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {

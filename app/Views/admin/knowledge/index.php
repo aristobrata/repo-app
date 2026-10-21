@@ -3,6 +3,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>Kelola Aktivitas Knowledge Management</h4>
     <div>
+        <a href="<?= base_url('admin/knowledge/export') . (!empty($filters) ? '?' . http_build_query(array_filter($filters)) : '') ?>" class="btn btn-outline-success">📊 Export Excel</a>
         <a href="<?= base_url('admin/knowledge/import') ?>" class="btn btn-outline-secondary">📥 Import Excel</a>
         <a href="<?= base_url('admin/knowledge/tambah') ?>" class="btn btn-primary">+ Tambah Aktivitas</a>
     </div>
@@ -16,6 +17,7 @@
 </ul>
 
 <form method="get" class="row g-2 mb-3">
+    <input type="hidden" name="per_page" value="<?= per_page_from_request('per_page') ?>">
     <div class="col-md-3"><input type="text" name="keyword" class="form-control" placeholder="Cari judul event..." value="<?= esc($filters['keyword'] ?? '') ?>"></div>
     <div class="col-md-3"><input type="text" name="pillar" class="form-control" placeholder="Pillar KM" value="<?= esc($filters['pillar'] ?? '') ?>"></div>
     <div class="col-md-2"><input type="text" name="bulan" class="form-control" placeholder="Bulan" value="<?= esc($filters['bulan'] ?? '') ?>"></div>
@@ -23,6 +25,7 @@
     <div class="col-md-2"><button class="btn btn-secondary w-100">Filter</button></div>
 </form>
 
+<?= per_page_bar('aktivitas', $pager) ?>
 <div class="table-responsive">
 <table class="table table-striped table-sm">
     <thead><tr><th>Bulan</th><th>Pillar</th><th>Judul Event</th><th>Peserta</th><th>Departemen</th><th>Peran</th><th>Poin</th><th>Aksi</th></tr></thead>

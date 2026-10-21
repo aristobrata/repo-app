@@ -31,7 +31,7 @@ class InovasiKaryawanManageController extends BaseController
     public function index()
     {
         $filters  = $this->request->getGet(['keyword', 'departemen', 'band']);
-        $karyawan = $this->karyawanModel->daftar($filters)->paginate(20, 'inovasi_karyawan');
+        $karyawan = $this->karyawanModel->daftar($filters)->paginate(per_page_from_request(), 'inovasi_karyawan');
         return view('admin/inovasi_karyawan/index', [
             'karyawan'   => $karyawan,
             'pager'      => $this->karyawanModel->pager,

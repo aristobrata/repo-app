@@ -30,7 +30,7 @@ class InovasiManageController extends BaseController
     public function index()
     {
         $filters = $this->request->getGet(['keyword', 'kategori', 'tahun']);
-        $inovasi = $this->inovasiModel->daftar($filters)->paginate(20);
+        $inovasi = $this->inovasiModel->daftar($filters)->paginate(per_page_from_request());
         return view('admin/innovations/index', ['inovasi' => $inovasi, 'pager' => $this->inovasiModel->pager, 'filters' => $filters]);
     }
 
@@ -242,5 +242,78 @@ class InovasiManageController extends BaseController
         $this->logModel->catat(session()->get('user_id'), 'import_inovasi', 'inovasi', null, "{$jumlahInovasi} inovasi, {$jumlahAnggota} anggota tim");
 
         return redirect()->to('/admin/inovasi')->with('success', "Import selesai: {$jumlahInovasi} inovasi baru, {$jumlahAnggota} anggota tim ditambahkan. Data duplikat (nama_tim+judul sama) otomatis dilewati.");
+    }
+
+    // ==================== EXPORT EXCEL ====================
+    /**
+     * Export daftar inovasi ke .xlsx, menghormati filter yang sedang aktif
+     * di halaman (keyword, kategori, tahun) — sama seperti yang dipakai index().
+     */
+    public function exportExcel()
+    {
+        $filters = $this->request->getGet(['keyword', 'kategori', 'tahun']);
+        $data    = $this->inovasiModel->daftar($filters)->findAll();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Inovasi');
+
+        $headers = [
+            'No', 'Kategori Inovasi', 'Tanggal Registrasi', 'Nama Tim', 'Judul Inovasi',
+            'Area Improvement', 'Unit/Dept Area Implementasi', 'Unit/Biro Area Implementasi',
+            'Biaya Project', 'Saving', 'Opp. Lost', 'Revenue', 'Total Benefit',
+            'Status Saat Ini', 'Keterangan', 'Hyperlink Dokumen', 'Tahun',
+        ];
+        $sheet->fromArray($headers, null, 'A1');
+        $sheet->getStyle('A1:Q1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:Q1')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('1E3A8A');
+        $sheet->getStyle('A1:Q1')->getFont()->getColor()->setRGB('FFFFFF');
+
+        $row = 2;
+        foreach ($data as $i => $d) {
+            $sheet->fromArray([
+                $i + 1,
+                $d['kategori_inovasi'],
+                $d['tanggal_registrasi'],
+                $d['nama_tim'],
+                $d['judul_inovasi'],
+                $d['area_improvement'],
+                $d['unit_dept_area_implementasi'],
+                $d['unit_biro_area_implementasi'],
+                $d['biaya_project'],
+                $d['saving'],
+                $d['opp_lost'],
+                $d['revenue'],
+                $d['total_benefit'],
+                $d['status_saat_ini'],
+                $d['keterangan'],
+                $d['hyperlink_dokumen'],
+                $d['tahun'],
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        foreach (range('A', 'Q') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        $sheet->freezePane('A2');
+
+        $this->logModel->catat(session()->get('user_id'), 'export_inovasi', 'inovasi', null, count($data) . ' baris');
+
+        $filename = 'inovasi_export_' . date('Ymd_His') . '.xlsx';
+
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 }

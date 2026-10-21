@@ -12,6 +12,7 @@
 <?php if (session()->getFlashdata('error')): ?><div class="alert alert-danger"><?= esc(session()->getFlashdata('error')) ?></div><?php endif; ?>
 
 <form method="get" class="row g-2 mb-3">
+    <input type="hidden" name="per_page" value="<?= per_page_from_request('per_page') ?>">
     <div class="col-md-4"><input type="text" name="keyword" class="form-control" placeholder="Cari nama / Pers No / ID Number" value="<?= esc($filters['keyword'] ?? '') ?>"></div>
     <div class="col-md-4">
         <select name="departemen" class="form-select">
@@ -25,6 +26,7 @@
     <div class="col-md-2"><button class="btn btn-secondary w-100">Filter</button></div>
 </form>
 
+<?= per_page_bar('inovasi_karyawan', $pager) ?>
 <div class="table-responsive">
 <table class="table table-striped table-sm align-middle">
     <thead><tr><th>Pers/No</th><th>ID Number</th><th>Nama</th><th>Band</th><th>Jabatan</th><th>Gender</th><th>Departemen</th><th>Unit Kerja</th><th>Seksi</th><th style="width:130px">Aksi</th></tr></thead>
