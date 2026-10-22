@@ -43,7 +43,7 @@
         /* Garis aksen merah tipis di atas setiap card, konsisten dengan identitas Semen Padang */
         .card:not(.border-0) { border-top: 3px solid var(--sig-red); }
 
-        .pagination .page-item.active .page-link { background-color: var(--sig-red); border-color: var(--sig-red); }
+        .pagination .page-item.active .page-link { background-color: var(--sig-red); border-color: var(--sig-red); color: #fff; }
         .pagination .page-link { color: var(--sig-red); }
     </style>
     <?= $this->renderSection('styles') ?>
