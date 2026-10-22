@@ -17,7 +17,7 @@
     <li class="nav-item"><a class="nav-link" href="<?= base_url('admin/knowledge/rekap') ?>">Rekap/Leaderboard</a></li>
     <li class="nav-item"><a class="nav-link" href="<?= base_url('admin/knowledge/target') ?>">Target Tahunan</a></li>
 </ul>
-<p class="text-muted small">Data ini diambil dari sheet <code>dim_karyawan</code>. Import ulang akan MENIMPA seluruh data lama (snapshot master terbaru). Kolom ke-10 (setelah Bidang) dibaca sebagai <strong>Band</strong> (misal: Band II, Band III, dst) &mdash; dipakai untuk chart Participation Rate per Band di Dashboard Summary Inovasi.</p>
+
 <form method="get" action="<?= base_url('admin/knowledge/karyawan') ?>" class="row g-2 mb-3">
     <input type="hidden" name="per_page" value="<?= per_page_from_request('per_page') ?>">
     <div class="col-md-4"><input type="text" name="keyword" class="form-control" placeholder="Cari nama / NIK / NIP" value="<?= esc($filters['keyword'] ?? '') ?>"></div>

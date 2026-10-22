@@ -5,6 +5,7 @@ use App\Models\InovasiAnggotaTimModel;
 use App\Models\InovasiLampiranModel;
 use App\Models\InovasiLikeModel;
 use App\Models\KmAktivitasModel;
+use App\Models\KompetisiInovasiModel;
 use App\Models\ActivityLogModel;
 
 class InnovationController extends BaseController
@@ -14,6 +15,7 @@ class InnovationController extends BaseController
     protected InovasiLampiranModel $lampiranModel;
     protected InovasiLikeModel $likeModel;
     protected KmAktivitasModel $kmModel;
+    protected KompetisiInovasiModel $kompetisiModel;
     protected ActivityLogModel $logModel;
 
     public function __construct()
@@ -23,6 +25,7 @@ class InnovationController extends BaseController
         $this->lampiranModel = new InovasiLampiranModel();
         $this->likeModel     = new InovasiLikeModel();
         $this->kmModel       = new KmAktivitasModel();
+        $this->kompetisiModel = new KompetisiInovasiModel();
         $this->logModel      = new ActivityLogModel();
     }
 
@@ -46,11 +49,33 @@ class InnovationController extends BaseController
         ];
         $kmAktivitas = $this->kmModel->daftar($kmFilters)->paginate(per_page_from_request('km_per_page'), 'km');
 
-        $tab = $this->request->getGet('tab') === 'km' ? 'km' : 'inovasi';
+        // Direktori Kompetisi: filter berprefiks kp_ dan pager/group sendiri supaya tidak bentrok dengan tab lain
+        $kpGet     = $this->request->getGet(['kp_keyword', 'kp_jenis', 'kp_event', 'kp_tahun']);
+        $kpFilters = [
+            'keyword' => $kpGet['kp_keyword'] ?? null,
+            'jenis'   => $kpGet['kp_jenis'] ?? null,
+            'event'   => $kpGet['kp_event'] ?? null,
+            'tahun'   => $kpGet['kp_tahun'] ?? null,
+        ];
+        $kompetisi = $this->kompetisiModel->daftar($kpFilters)->paginate(per_page_from_request('kompetisi_per_page'), 'kompetisi');
+        $kompetisiPager = $this->kompetisiModel->pager;
+        $jumlahPersonil = [];
+        if ($kompetisi) {
+            $rows = (new \App\Models\KompetisiAnggotaModel())->select('kompetisi_id, COUNT(id) as total')
+                ->whereIn('kompetisi_id', array_column($kompetisi, 'id'))->groupBy('kompetisi_id')->findAll();
+            foreach ($rows as $r) { $jumlahPersonil[$r['kompetisi_id']] = (int) $r['total']; }
+        }
+
+        $tabGet = $this->request->getGet('tab');
+        $tab    = in_array($tabGet, ['km', 'kompetisi'], true) ? $tabGet : 'inovasi';
 
         return view('innovation/index', [
             'inovasi'     => $inovasi, 'pager' => $this->inovasiModel->pager, 'filters' => $filters,
             'kmAktivitas' => $kmAktivitas, 'kmPager' => $this->kmModel->pager, 'kmGet' => $kmGet,
+            'kompetisi'   => $kompetisi, 'kompetisiPager' => $kompetisiPager, 'kpGet' => $kpGet, 'jumlahPersonil' => $jumlahPersonil,
+            'opsiJenis'   => $this->kompetisiModel->nilaiUnik('jenis_penghargaan'),
+            'opsiEvent'   => $this->kompetisiModel->nilaiUnik('event_kompetisi'),
+            'opsiTahun'   => array_reverse($this->kompetisiModel->nilaiUnik('tahun')),
             'tab'         => $tab,
         ]);
     }

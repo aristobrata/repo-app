@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <h4 class="mb-3">Library</h4>
-<p class="text-muted small">Kumpulan dokumen dari Inovasi dan Knowledge Management, ditampilkan otomatis di satu tempat.</p>
+<p class="text-muted small">Kumpulan dokumen dari Inovasi, Knowledge Management, dan Kompetisi Inovasi, ditampilkan otomatis di satu tempat.</p>
 
 <form method="get" class="row g-2 mb-4">
     <div class="col-md-5">
@@ -16,6 +16,7 @@
             <option value="">Semua Sumber</option>
             <option value="inovasi" <?= ($filters['sumber'] ?? '') === 'inovasi' ? 'selected' : '' ?>>Inovasi</option>
             <option value="km" <?= ($filters['sumber'] ?? '') === 'km' ? 'selected' : '' ?>>Knowledge Management</option>
+            <option value="kompetisi" <?= ($filters['sumber'] ?? '') === 'kompetisi' ? 'selected' : '' ?>>Kompetisi Inovasi</option>
         </select>
     </div>
     <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Cari</button></div>
@@ -32,14 +33,18 @@
                 <img src="<?= !empty($it['cover']) ? base_url('library-image/' . $it['cover']) : base_url('assets/img/no-cover.svg') ?>"
                      class="card-img-top" style="height:160px; object-fit:cover; background:#E2E8F0;">
                 <div class="card-body d-flex flex-column">
-                    <span class="badge <?= $it['sumber'] === 'inovasi' ? 'bg-primary' : 'bg-info text-dark' ?> mb-2 align-self-start">
-                        <?= $it['sumber'] === 'inovasi' ? 'Inovasi' : 'Knowledge Mgmt' ?>
-                    </span>
+                    <?php
+                        $badgeKelas = ['inovasi' => 'bg-primary', 'km' => 'bg-info text-dark', 'kompetisi' => 'bg-warning text-dark'][$it['sumber']] ?? 'bg-secondary';
+                        $badgeNama  = ['inovasi' => 'Inovasi', 'km' => 'Knowledge Mgmt', 'kompetisi' => '🏆 Kompetisi Inovasi'][$it['sumber']] ?? '';
+                    ?>
+                    <span class="badge <?= $badgeKelas ?> mb-2 align-self-start"><?= $badgeNama ?></span>
                     <h6 class="card-title"><?= esc($it['judul']) ?></h6>
                     <p class="card-text small text-muted mb-2"><?= esc($it['kategori'] ?? '-') ?> · <?= esc($it['tahun']) ?></p>
                     <div class="mt-auto">
                         <?php if ($it['sumber'] === 'inovasi'): ?>
                             <a href="<?= base_url('inovasi/' . $it['id']) ?>" class="btn btn-sm btn-outline-primary w-100">Lihat Detail</a>
+                        <?php elseif ($it['sumber'] === 'kompetisi'): ?>
+                            <a href="<?= base_url('library/kompetisi/' . $it['id']) ?>" class="btn btn-sm btn-outline-primary w-100">Lihat Detail</a>
                         <?php else: ?>
                             <a href="<?= base_url('library/km/' . $it['id']) ?>" class="btn btn-sm btn-outline-primary w-100">Lihat Detail</a>
                         <?php endif; ?>

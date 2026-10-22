@@ -19,6 +19,8 @@ $routes->group('library', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/', 'LibraryController::index');
     $routes->get('km/(:num)', 'LibraryController::kmDetail/$1');
     $routes->get('km/(:num)/download', 'LibraryController::downloadKmFile/$1');
+    $routes->get('kompetisi/(:num)', 'LibraryController::kompetisiDetail/$1');
+    $routes->get('kompetisi/(:num)/download', 'LibraryController::downloadKompetisiFile/$1');
 });
 $routes->get('library-image/(:any)', 'LibraryController::streamCoverImage/$1', ['filter' => 'auth']);
 
@@ -44,6 +46,17 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->post('inovasi/(:num)/update', 'Admin\InovasiManageController::update/$1');
     $routes->post('inovasi/(:num)/hapus', 'Admin\InovasiManageController::destroy/$1');
     $routes->get('inovasi/export', 'Admin\InovasiManageController::exportExcel');
+
+    // Kompetisi Inovasi (CRUD + Import/Export Excel)
+    $routes->get('kompetisi', 'Admin\KompetisiManageController::index');
+    $routes->get('kompetisi/tambah', 'Admin\KompetisiManageController::createForm');
+    $routes->post('kompetisi', 'Admin\KompetisiManageController::store');
+    $routes->get('kompetisi/import', 'Admin\KompetisiManageController::importForm');
+    $routes->post('kompetisi/import', 'Admin\KompetisiManageController::import');
+    $routes->get('kompetisi/export', 'Admin\KompetisiManageController::exportExcel');
+    $routes->get('kompetisi/(:num)/edit', 'Admin\KompetisiManageController::editForm/$1');
+    $routes->post('kompetisi/(:num)/update', 'Admin\KompetisiManageController::update/$1');
+    $routes->post('kompetisi/(:num)/hapus', 'Admin\KompetisiManageController::destroy/$1');
 
     // Master Karyawan Inovasi
     $routes->get('inovasi-karyawan', 'Admin\InovasiKaryawanManageController::index');
