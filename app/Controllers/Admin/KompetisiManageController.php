@@ -97,6 +97,7 @@ class KompetisiManageController extends BaseController
         $errors = [];
         $aturan = [
             'file_dokumen' => ['label' => 'File dokumen', 'ext' => ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'zip', 'rar', 'jpg', 'jpeg', 'png'], 'kb' => 51200, 'mime' => null],
+            'foto_penghargaan' => ['label' => 'Foto dokumentasi penghargaan', 'ext' => ['jpg', 'jpeg', 'png'], 'kb' => 5120, 'mime' => ['image/jpeg', 'image/png']],
             'cover'        => ['label' => 'Sampul', 'ext' => ['jpg', 'jpeg', 'png'], 'kb' => 3072, 'mime' => ['image/jpeg', 'image/png']],
         ];
         foreach ($aturan as $field => $a) {
@@ -147,6 +148,7 @@ class KompetisiManageController extends BaseController
         $data = $this->dataFromPost();
         $data['file_dokumen']    = $this->handleUpload('file_dokumen', 'originals');
         $data['cover_thumbnail'] = $this->handleUpload('cover', 'covers');
+        $data['foto_penghargaan'] = $this->handleUpload('foto_penghargaan', 'dokumentasi');
         $id = $this->kompetisiModel->insert($data);
 
         $this->simpanAnggota((int) $id);
@@ -178,6 +180,14 @@ class KompetisiManageController extends BaseController
             $this->hapusFile('covers', $kompetisi['cover_thumbnail']);
             $data['cover_thumbnail'] = $baru;
         }
+        if ($baru = $this->handleUpload('foto_penghargaan', 'dokumentasi')) {
+            $this->hapusFile('dokumentasi', $kompetisi['foto_penghargaan'] ?? null);
+            $data['foto_penghargaan'] = $baru;
+        }
+        if ($this->request->getPost('hapus_foto_penghargaan') && empty($data['foto_penghargaan'])) {
+            $this->hapusFile('dokumentasi', $kompetisi['foto_penghargaan'] ?? null);
+            $data['foto_penghargaan'] = null;
+        }
         if ($this->request->getPost('hapus_file_dokumen') && empty($data['file_dokumen'])) {
             $this->hapusFile('originals', $kompetisi['file_dokumen']);
             $data['file_dokumen'] = null;
@@ -207,6 +217,7 @@ class KompetisiManageController extends BaseController
         if ($kompetisi) {
             $this->hapusFile('originals', $kompetisi['file_dokumen']);
             $this->hapusFile('covers', $kompetisi['cover_thumbnail']);
+            $this->hapusFile('dokumentasi', $kompetisi['foto_penghargaan'] ?? null);
             $this->anggotaModel->where('kompetisi_id', $id)->delete();
             $this->kompetisiModel->delete($id);
             $this->logModel->catat(session()->get('user_id'), 'hapus_kompetisi', 'kompetisi_inovasi', $id, $kompetisi['judul_inovasi']);

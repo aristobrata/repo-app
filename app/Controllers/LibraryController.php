@@ -125,6 +125,19 @@ class LibraryController extends BaseController
         return $this->response->download($path, null);
     }
 
+    /** Tampilkan foto dokumentasi penghargaan kompetisi (hanya untuk user yang sudah login). */
+    public function kompetisiFoto(int $id)
+    {
+        $item = $this->kompetisiModel->find($id);
+        if (!$item || empty($item['foto_penghargaan'])) { throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound(); }
+        $path = WRITEPATH . 'uploads/dokumentasi/' . basename($item['foto_penghargaan']);
+        if (!is_file($path)) { throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound(); }
+        $file = new File($path);
+        return $this->response->setHeader('Content-Type', $file->getMimeType())
+            ->setHeader('Cache-Control', 'private, max-age=86400')
+            ->setBody(file_get_contents($path));
+    }
+
     public function downloadKmFile(int $id)
     {
         $item = $this->kmModel->find($id);

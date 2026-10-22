@@ -21,6 +21,7 @@ $routes->group('library', ['filter' => 'auth'], static function ($routes) {
     $routes->get('km/(:num)/download', 'LibraryController::downloadKmFile/$1');
     $routes->get('kompetisi/(:num)', 'LibraryController::kompetisiDetail/$1');
     $routes->get('kompetisi/(:num)/download', 'LibraryController::downloadKompetisiFile/$1');
+    $routes->get('kompetisi/(:num)/foto', 'LibraryController::kompetisiFoto/$1');
 });
 $routes->get('library-image/(:any)', 'LibraryController::streamCoverImage/$1', ['filter' => 'auth']);
 

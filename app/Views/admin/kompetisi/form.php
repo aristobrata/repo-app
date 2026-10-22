@@ -72,6 +72,14 @@ $barisAnggota = $anggota ?: [['nik' => '', 'nama_karyawan' => '']];
             </div>
         </div>
     </div>
+    <div class="mb-3" style="max-width:520px">
+        <label class="form-label">Foto Dokumentasi Penghargaan <span class="badge bg-secondary">Tidak Wajib</span></label>
+        <input type="file" name="foto_penghargaan" class="form-control" accept="image/jpeg,image/png" id="input-foto">
+        <div class="form-text">Foto saat menerima penghargaan / piala / sertifikat. JPG/PNG, maks. 5 MB. Tampil di halaman detail Library.</div>
+        <?php $fotoSaatIni = $edit && !empty($kompetisi['foto_penghargaan']) ? base_url('library/kompetisi/' . $kompetisi['id'] . '/foto') : ''; ?>
+        <img id="preview-foto" src="<?= $fotoSaatIni ?>" class="img-fluid rounded mt-2" style="max-height:200px; <?= $fotoSaatIni ? '' : 'display:none;' ?>">
+        <?php if ($fotoSaatIni): ?><div class="form-text"><label><input type="checkbox" name="hapus_foto_penghargaan" value="1"> hapus foto ini</label></div><?php endif; ?>
+    </div>
     <button type="submit" class="btn btn-primary">Simpan</button>
     <a href="<?= base_url('admin/kompetisi') ?>" class="btn btn-outline-secondary">Batal</a>
 </form>
@@ -91,6 +99,11 @@ $barisAnggota = $anggota ?: [['nik' => '', 'nama_karyawan' => '']];
         const rows = wrapper.querySelectorAll('.anggota-row');
         if (rows.length > 1) { e.target.closest('.anggota-row').remove(); }
         else { rows[0].querySelectorAll('input').forEach(function (i) { i.value = ''; }); }
+    });
+    document.getElementById('input-foto').addEventListener('change', function () {
+        const f = this.files && this.files[0];
+        const img = document.getElementById('preview-foto');
+        if (f) { img.src = URL.createObjectURL(f); img.style.display = ''; }
     });
     document.getElementById('input-cover').addEventListener('change', function () {
         const f = this.files && this.files[0];

@@ -19,7 +19,7 @@ class KompetisiInovasiModel extends Model
     protected $returnType       = 'array';
     protected $allowedFields    = [
         'nama_tim', 'judul_inovasi', 'jenis_penghargaan', 'event_kompetisi', 'penyelenggara',
-        'tanggal_penghargaan', 'tahun', 'keterangan', 'link_dokumen', 'file_dokumen', 'cover_thumbnail', 'jumlah_view',
+        'tanggal_penghargaan', 'tahun', 'keterangan', 'link_dokumen', 'file_dokumen', 'cover_thumbnail', 'foto_penghargaan', 'jumlah_view',
     ];
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
@@ -33,7 +33,13 @@ class KompetisiInovasiModel extends Model
 
     private function pastikanTabel(): void
     {
-        if ($this->db->tableExists($this->table)) { return; }
+        if ($this->db->tableExists($this->table)) {
+            // tabel lama (sebelum fitur foto dokumentasi): tambahkan kolom bila belum ada
+            if (!$this->db->fieldExists('foto_penghargaan', $this->table)) {
+                $this->db->query("ALTER TABLE `kompetisi_inovasi` ADD COLUMN `foto_penghargaan` VARCHAR(255) NULL AFTER `cover_thumbnail`");
+            }
+            return;
+        }
         $this->db->query("CREATE TABLE IF NOT EXISTS `kompetisi_inovasi` (
             `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             `nama_tim` VARCHAR(255) NULL,
@@ -47,6 +53,7 @@ class KompetisiInovasiModel extends Model
             `link_dokumen` VARCHAR(500) NULL,
             `file_dokumen` VARCHAR(255) NULL,
             `cover_thumbnail` VARCHAR(255) NULL,
+            `foto_penghargaan` VARCHAR(255) NULL,
             `jumlah_view` INT NOT NULL DEFAULT 0,
             `created_at` DATETIME NULL,
             `updated_at` DATETIME NULL,

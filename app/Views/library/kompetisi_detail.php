@@ -21,6 +21,13 @@
 
 <?php if (!empty($item['keterangan'])): ?><p><?= nl2br(esc($item['keterangan'])) ?></p><?php endif; ?>
 
+<?php if (!empty($item['foto_penghargaan'])): ?>
+    <h6 class="mt-4">Dokumentasi Penghargaan</h6>
+    <a href="<?= base_url('library/kompetisi/' . $item['id'] . '/foto') ?>" target="_blank">
+        <img src="<?= base_url('library/kompetisi/' . $item['id'] . '/foto') ?>" alt="Dokumentasi penghargaan" class="img-fluid rounded border" style="max-height:420px;">
+    </a>
+<?php endif; ?>
+
 <h6 class="mt-4">Personil (<?= count($anggota) ?>)</h6>
 <?php if (empty($anggota)): ?>
     <p class="text-muted small">Belum ada data personil.</p>
