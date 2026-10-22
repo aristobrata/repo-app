@@ -148,4 +148,34 @@
 
 </div>
 
+<script>
+// Jaga tab aktif: tulis ?tab=... ke URL saat tab diganti, dan sisipkan tab ke semua link pagination di tiap tab,
+// supaya klik "Tampilkan N data" / Next / Prev tidak kembali ke Direktori Inovasi.
+document.addEventListener('DOMContentLoaded', function () {
+    var panes = {inovasi: 'tab-inovasi', km: 'tab-km', kompetisi: 'tab-kompetisi'};
+    function withTab(href, tab) {
+        try { var u = new window.URL(href, window.location.href); u.searchParams.set('tab', tab); return u.toString(); }
+        catch (e) { return href; }
+    }
+    Object.keys(panes).forEach(function (tab) {
+        var pane = document.getElementById(panes[tab]);
+        if (!pane) { return; }
+        pane.querySelectorAll('a.page-link[href]').forEach(function (a) { a.href = withTab(a.getAttribute('href'), tab); });
+        var btn = document.getElementById('tab-' + tab + '-btn');
+        if (btn) {
+            btn.addEventListener('shown.bs.tab', function () {
+                var u = new window.URL(window.location.href);
+                u.searchParams.set('tab', tab);
+                window.history.replaceState(null, '', u.toString());
+            });
+        }
+    });
+    var aktif = document.querySelector('#inovasiKmTab .nav-link.active');
+    if (aktif) {
+        var u = new window.URL(window.location.href);
+        u.searchParams.set('tab', aktif.id.replace('tab-', '').replace('-btn', ''));
+        window.history.replaceState(null, '', u.toString());
+    }
+});
+</script>
 <?= $this->endSection() ?>
