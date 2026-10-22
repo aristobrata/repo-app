@@ -75,6 +75,8 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('knowledge', 'Admin\KmManageController::index');
     $routes->get('knowledge/tambah', 'Admin\KmManageController::createForm');
     $routes->post('knowledge', 'Admin\KmManageController::store');
+    $routes->get('knowledge/(:num)/edit', 'Admin\KmManageController::editForm/$1');
+    $routes->post('knowledge/(:num)/update', 'Admin\KmManageController::update/$1');
     $routes->post('knowledge/(:num)/hapus', 'Admin\KmManageController::destroy/$1');
     $routes->get('knowledge/karyawan', 'Admin\KmManageController::karyawan');
     $routes->post('knowledge/karyawan/sinkron-band', 'Admin\KmManageController::sinkronBand');

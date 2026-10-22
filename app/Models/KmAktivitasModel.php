@@ -11,19 +11,35 @@ class KmAktivitasModel extends Model
         'bulan', 'pillar_km', 'aktivitas', 'activity_type', 'subactivity', 'judul_event',
         'tanggal_score', 'tanggal_create', 'tempat', 'nik', 'nip', 'nama_peserta',
         'direktorat', 'departemen', 'biro', 'org_unit', 'bidang', 'peran', 'poin',
-        'jumlah_karyawan_bulanan', 'poin_corporate', 'file_dokumen', 'cover', 'tahun',
+        'jumlah_karyawan_bulanan', 'poin_corporate', 'file_dokumen', 'cover', 'tahun', 'created_at',
     ];
     protected $useTimestamps = false; // created_at diisi manual saat import
 
     public function daftar(array $filters = [])
     {
         $builder = $this;
-        if (!empty($filters['keyword']))  { $builder = $builder->like('judul_event', $filters['keyword']); }
+        if (!empty($filters['keyword']))  {
+            $builder = $builder->groupStart()
+                ->like('judul_event', $filters['keyword'])
+                ->orLike('nama_peserta', $filters['keyword'])
+                ->orLike('nik', $filters['keyword'])
+                ->orLike('nip', $filters['keyword'])
+                ->groupEnd();
+        }
+        if (!empty($filters['peran']))    { $builder = $builder->where('peran', $filters['peran']); }
         if (!empty($filters['pillar']))   { $builder = $builder->where('pillar_km', $filters['pillar']); }
         if (!empty($filters['bulan']))    { $builder = $builder->where('bulan', $filters['bulan']); }
         if (!empty($filters['tahun']))    { $builder = $builder->where('tahun', $filters['tahun']); }
         if (!empty($filters['dept']))     { $builder = $builder->where('departemen', $filters['dept']); }
         return $builder->orderBy('tanggal_score', 'DESC');
+    }
+
+    /** Nilai unik sebuah kolom (untuk dropdown filter). Kolom dibatasi daftar putih. */
+    public function nilaiUnik(string $kolom): array
+    {
+        if (!in_array($kolom, ['pillar_km', 'bulan', 'tahun', 'departemen', 'peran'], true)) { return []; }
+        $rows = $this->select($kolom)->distinct()->where("$kolom IS NOT NULL")->where("$kolom !=", '')->orderBy($kolom, 'ASC')->findAll();
+        return array_column($rows, $kolom);
     }
 
     /** KPI-01: total poin KM akumulasi */

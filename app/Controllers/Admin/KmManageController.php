@@ -32,66 +32,168 @@ class KmManageController extends BaseController
     // ---- Tab Aktivitas ----
     public function index()
     {
-        $filters = $this->request->getGet(['keyword', 'pillar', 'bulan', 'tahun']);
+        $filters   = $this->request->getGet(['keyword', 'pillar', 'bulan', 'tahun', 'dept', 'peran']);
         $aktivitas = $this->aktivitasModel->daftar($filters)->paginate(per_page_from_request(), 'aktivitas');
-        return view('admin/knowledge/index', ['aktivitas' => $aktivitas, 'pager' => $this->aktivitasModel->pager, 'filters' => $filters]);
-    }
-
-    public function createForm() { return view('admin/knowledge/create'); }
-
-    public function store()
-    {
-        $rules = [
-            'judul_event'  => 'required',
-            'nama_peserta' => 'required',
-            'file_dokumen' => 'permit_empty|max_size[file_dokumen,10240]',
-            'cover'        => 'permit_empty|max_size[cover,3072]|ext_in[cover,jpg,jpeg,png]',
-        ];
-        if (!$this->validate($rules)) { return redirect()->back()->withInput()->with('errors', $this->validator->getErrors()); }
-
-        $fileDokumen = null;
-        $file = $this->request->getFile('file_dokumen');
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $fileDokumen = $file->getRandomName();
-            $file->move(WRITEPATH . 'uploads/originals', $fileDokumen);
-        }
-
-        $id = $this->aktivitasModel->insert([
-            'bulan' => $this->request->getPost('bulan'), 'pillar_km' => $this->request->getPost('pillar_km'),
-            'aktivitas' => $this->request->getPost('aktivitas'), 'subactivity' => $this->request->getPost('subactivity'),
-            'judul_event' => $this->request->getPost('judul_event'), 'tanggal_score' => $this->request->getPost('tanggal_score') ?: null,
-            'tempat' => $this->request->getPost('tempat'), 'nik' => $this->request->getPost('nik'),
-            'nip' => $this->request->getPost('nip'), 'nama_peserta' => $this->request->getPost('nama_peserta'),
-            'direktorat' => $this->request->getPost('direktorat'), 'departemen' => $this->request->getPost('departemen'),
-            'peran' => $this->request->getPost('peran'), 'poin' => $this->request->getPost('poin') ?: 0,
-            'file_dokumen' => $fileDokumen, 'cover' => $this->handleCoverUpload(), 'tahun' => $this->request->getPost('tahun'),
+        return view('admin/knowledge/index', [
+            'aktivitas' => $aktivitas, 'pager' => $this->aktivitasModel->pager, 'filters' => $filters,
+            'opsi_pillar' => $this->aktivitasModel->nilaiUnik('pillar_km'), 'opsi_bulan' => $this->aktivitasModel->nilaiUnik('bulan'),
+            'opsi_tahun'  => $this->aktivitasModel->nilaiUnik('tahun'), 'opsi_dept' => $this->aktivitasModel->nilaiUnik('departemen'),
+            'opsi_peran'  => $this->aktivitasModel->nilaiUnik('peran'),
         ]);
-        $this->logModel->catat(session()->get('user_id'), 'tambah_km_aktivitas', 'km_aktivitas', $id);
-        return redirect()->to('/admin/knowledge')->with('success', 'Aktivitas KM berhasil ditambahkan.');
     }
 
-    /** Upload sampul TIDAK WAJIB -- kalau kosong, modul Library akan otomatis pakai gambar placeholder */
-    private function handleCoverUpload(): ?string
+    private function opsiAktivitasForm(): array
     {
-        $cover = $this->request->getFile('cover');
-        if ($cover && $cover->isValid() && !$cover->hasMoved()) {
-            $nama = $cover->getRandomName();
-            $cover->move(WRITEPATH . 'uploads/covers', $nama);
+        return [
+            'opsi_pillar' => $this->aktivitasModel->nilaiUnik('pillar_km'),
+            'opsi_dept'   => $this->aktivitasModel->nilaiUnik('departemen'),
+        ];
+    }
+
+    public function createForm() { return view('admin/knowledge/aktivitas_form', array_merge(['item' => null], $this->opsiAktivitasForm())); }
+
+    public function editForm(int $id)
+    {
+        $item = $this->aktivitasModel->find($id);
+        if (!$item) { throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound(); }
+        return view('admin/knowledge/aktivitas_form', array_merge(['item' => $item], $this->opsiAktivitasForm()));
+    }
+
+    /** Ambil data dari form. Bulan/tahun otomatis dari tanggal bila kosong; identitas peserta dilengkapi dari Master Karyawan bila NIK dikenal. */
+    private function aktivitasDataFromPost(): array
+    {
+        $g = fn(string $k) => trim((string) $this->request->getPost($k));
+        $tanggal = $g('tanggal_score') ?: null;
+        $bulanIndo = [1 => 'JANUARI', 2 => 'FEBRUARI', 3 => 'MARET', 4 => 'APRIL', 5 => 'MEI', 6 => 'JUNI', 7 => 'JULI', 8 => 'AGUSTUS', 9 => 'SEPTEMBER', 10 => 'OKTOBER', 11 => 'NOVEMBER', 12 => 'DESEMBER'];
+        $bulan = strtoupper($g('bulan'));
+        $tahun = $g('tahun');
+        if ($tanggal) {
+            if ($bulan === '') { $bulan = $bulanIndo[(int) date('n', strtotime($tanggal))]; }
+            if ($tahun === '') { $tahun = date('Y', strtotime($tanggal)); }
+        }
+        $data = [
+            'bulan' => $bulan ?: null, 'pillar_km' => $g('pillar_km') ?: null, 'aktivitas' => $g('aktivitas') ?: null,
+            'activity_type' => $g('activity_type') ?: 'event', 'subactivity' => $g('subactivity') ?: null,
+            'judul_event' => $g('judul_event'), 'tanggal_score' => $tanggal, 'tanggal_create' => $g('tanggal_create') ?: null,
+            'tempat' => $g('tempat') ?: null, 'nik' => $g('nik') ?: null, 'nip' => $g('nip') ?: null, 'nama_peserta' => $g('nama_peserta'),
+            'direktorat' => $g('direktorat') ?: null, 'departemen' => $g('departemen') ?: null, 'biro' => $g('biro') ?: null,
+            'org_unit' => $g('org_unit') ?: null, 'bidang' => $g('bidang') ?: null,
+            'peran' => $g('peran') ?: null, 'poin' => (int) ($g('poin') ?: 0), 'tahun' => $tahun ?: null,
+        ];
+        // lengkapi dari Master Karyawan KM (hanya kolom yang masih kosong)
+        if ($data['nik']) {
+            $k = $this->karyawanModel->where('perner', $data['nik'])->first();
+            if ($k) {
+                $peta = ['nama_peserta' => 'personnel_number', 'nip' => 'id_number', 'direktorat' => 'direktorat', 'departemen' => 'departemen',
+                         'biro' => 'biro', 'org_unit' => 'org_unit', 'bidang' => 'bidang'];
+                foreach ($peta as $kolom => $sumber) {
+                    if (empty($data[$kolom]) && !empty($k[$sumber])) { $data[$kolom] = $k[$sumber]; }
+                }
+            }
+        }
+        return $data;
+    }
+
+    private function aktivitasRules(): array { return ['judul_event' => 'required|min_length[3]']; }
+
+    /**
+     * Validasi upload manual (aturan ext_in/max_size bawaan CI4 + permit_empty tidak memblokir file salah).
+     * Dokumen: pdf/office/zip/rar/gambar maks 10 MB; sampul: jpg/png maks 3 MB.
+     */
+    private function cekUploadAktivitas(): array
+    {
+        $errors = [];
+        $aturan = [
+            'file_dokumen' => ['label' => 'Lampiran', 'ext' => ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'zip', 'rar', 'jpg', 'jpeg', 'png'], 'kb' => 10240, 'mime' => null],
+            'cover'        => ['label' => 'Sampul', 'ext' => ['jpg', 'jpeg', 'png'], 'kb' => 3072, 'mime' => ['image/jpeg', 'image/png']],
+        ];
+        foreach ($aturan as $field => $a) {
+            $f = $this->request->getFile($field);
+            if (!$f || $f->getError() === UPLOAD_ERR_NO_FILE) { continue; }
+            if (!$f->isValid()) { $errors[$field] = $a['label'] . ' gagal diunggah (' . $f->getErrorString() . ').'; continue; }
+            if (!in_array(strtolower($f->getClientExtension()), $a['ext'], true)) { $errors[$field] = $a['label'] . ' harus berformat: ' . implode(', ', $a['ext']) . '.'; continue; }
+            if ($f->getSize() > $a['kb'] * 1024) { $errors[$field] = $a['label'] . ' maksimal ' . round($a['kb'] / 1024) . ' MB.'; continue; }
+            if ($a['mime'] && !in_array($f->getMimeType(), $a['mime'], true)) { $errors[$field] = $a['label'] . ' bukan gambar JPG/PNG yang valid.'; }
+        }
+        return $errors;
+    }
+
+    private function simpanUpload(string $field, string $dir): ?string
+    {
+        $f = $this->request->getFile($field);
+        if ($f && $f->isValid() && !$f->hasMoved()) {
+            $nama = $f->getRandomName();
+            $f->move(WRITEPATH . 'uploads/' . $dir, $nama);
             return $nama;
         }
         return null;
+    }
+
+    private function hapusBerkas(string $dir, ?string $nama): void
+    {
+        if (!empty($nama)) {
+            $path = WRITEPATH . "uploads/{$dir}/" . basename($nama);
+            if (is_file($path)) { unlink($path); }
+        }
+    }
+
+    public function store()
+    {
+        $data   = $this->aktivitasDataFromPost();
+        $valid  = $this->validate($this->aktivitasRules());
+        $errors = $valid ? [] : $this->validator->getErrors();
+        if ($data['nama_peserta'] === '') { $errors['nama_peserta'] = 'Nama peserta wajib diisi (atau isi NIK yang terdaftar di Master Karyawan).'; }
+        $errors = array_merge($errors, $this->cekUploadAktivitas());
+        if ($errors) { return redirect()->back()->withInput()->with('errors', $errors); }
+
+        $data['file_dokumen'] = $this->simpanUpload('file_dokumen', 'originals');
+        $data['cover']        = $this->simpanUpload('cover', 'covers');
+        $data['created_at']   = date('Y-m-d H:i:s');
+        $id = $this->aktivitasModel->insert($data);
+        $this->logModel->catat(session()->get('user_id'), 'tambah_km_aktivitas', 'km_aktivitas', $id, $data['judul_event']);
+        return redirect()->to('/admin/knowledge')->with('success', 'Aktivitas KM berhasil ditambahkan.');
+    }
+
+    public function update(int $id)
+    {
+        $item = $this->aktivitasModel->find($id);
+        if (!$item) { throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound(); }
+
+        $data   = $this->aktivitasDataFromPost();
+        $valid  = $this->validate($this->aktivitasRules());
+        $errors = $valid ? [] : $this->validator->getErrors();
+        if ($data['nama_peserta'] === '') { $errors['nama_peserta'] = 'Nama peserta wajib diisi (atau isi NIK yang terdaftar di Master Karyawan).'; }
+        $errors = array_merge($errors, $this->cekUploadAktivitas());
+        if ($errors) { return redirect()->back()->withInput()->with('errors', $errors); }
+
+        if ($baru = $this->simpanUpload('file_dokumen', 'originals')) {
+            $this->hapusBerkas('originals', $item['file_dokumen']);
+            $data['file_dokumen'] = $baru;
+        } elseif ($this->request->getPost('hapus_file_dokumen')) {
+            $this->hapusBerkas('originals', $item['file_dokumen']);
+            $data['file_dokumen'] = null;
+        }
+        if ($baru = $this->simpanUpload('cover', 'covers')) {
+            $this->hapusBerkas('covers', $item['cover']);
+            $data['cover'] = $baru;
+        } elseif ($this->request->getPost('hapus_cover')) {
+            $this->hapusBerkas('covers', $item['cover']);
+            $data['cover'] = null;
+        }
+
+        $this->aktivitasModel->update($id, $data);
+        $this->logModel->catat(session()->get('user_id'), 'edit_km_aktivitas', 'km_aktivitas', $id, $data['judul_event']);
+        return redirect()->to('/admin/knowledge')->with('success', 'Aktivitas KM berhasil diperbarui.');
     }
 
     public function destroy(int $id)
     {
         $item = $this->aktivitasModel->find($id);
         if ($item) {
-            if (!empty($item['file_dokumen'])) {
-                $path = WRITEPATH . 'uploads/originals/' . $item['file_dokumen'];
-                if (is_file($path)) { unlink($path); }
-            }
+            $this->hapusBerkas('originals', $item['file_dokumen']);
+            $this->hapusBerkas('covers', $item['cover']);
             $this->aktivitasModel->delete($id);
-            $this->logModel->catat(session()->get('user_id'), 'hapus_km_aktivitas', 'km_aktivitas', $id);
+            $this->logModel->catat(session()->get('user_id'), 'hapus_km_aktivitas', 'km_aktivitas', $id, $item['judul_event']);
         }
         return redirect()->to('/admin/knowledge')->with('success', 'Aktivitas dihapus.');
     }
