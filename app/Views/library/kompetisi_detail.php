@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <img src="<?= !empty($item['cover_thumbnail']) ? base_url('library-image/' . $item['cover_thumbnail']) : base_url('assets/img/no-cover.svg') ?>"
-     class="img-fluid rounded mb-3" style="max-height:280px; object-fit:cover; width:100%; background:#E2E8F0;">
+     class="rounded mb-3 border" style="display:block; width:auto; height:auto; max-width:100%; background:#E2E8F0;">
 
 <span class="badge bg-warning text-dark mb-2">🏆 <?= esc($item['jenis_penghargaan'] ?: 'Kompetisi Inovasi') ?></span>
 <h4><?= esc($item['judul_inovasi']) ?></h4>

@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <?php if (!empty($item['foto_sampul'])): ?>
-    <img src="<?= base_url('knowledge-image/' . $item['foto_sampul']) ?>" class="img-fluid rounded mb-3" style="max-height:320px; object-fit:cover; width:100%;">
+    <img src="<?= base_url('knowledge-image/' . $item['foto_sampul']) ?>" class="rounded mb-3 border" style="display:block; width:auto; height:auto; max-width:100%; background:#E2E8F0;">
 <?php endif; ?>
 
 <span class="badge bg-info mb-2"><?= esc($item['topik'] ?? 'Knowledge') ?></span>

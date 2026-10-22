@@ -28,26 +28,25 @@
     <?php endif; ?>
 
     <?php foreach ($items as $it): ?>
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                <img src="<?= !empty($it['cover']) ? base_url('library-image/' . $it['cover']) : base_url('assets/img/no-cover.svg') ?>"
-                     class="card-img-top" style="height:160px; object-fit:cover; background:#E2E8F0;">
-                <div class="card-body d-flex flex-column">
-                    <?php
-                        $badgeKelas = ['inovasi' => 'bg-primary', 'km' => 'bg-info text-dark', 'kompetisi' => 'bg-warning text-dark'][$it['sumber']] ?? 'bg-secondary';
-                        $badgeNama  = ['inovasi' => 'Inovasi', 'km' => 'Knowledge Mgmt', 'kompetisi' => '🏆 Kompetisi Inovasi'][$it['sumber']] ?? '';
-                    ?>
+        <?php
+            $badgeKelas = ['inovasi' => 'bg-primary', 'km' => 'bg-info text-dark', 'kompetisi' => 'bg-warning text-dark'][$it['sumber']] ?? 'bg-secondary';
+            $badgeNama  = ['inovasi' => 'Inovasi', 'km' => 'Knowledge Mgmt', 'kompetisi' => '🏆 Kompetisi Inovasi'][$it['sumber']] ?? '';
+            $linkDetail = $it['sumber'] === 'inovasi' ? base_url('inovasi/' . $it['id'])
+                        : ($it['sumber'] === 'kompetisi' ? base_url('library/kompetisi/' . $it['id']) : base_url('library/km/' . $it['id']));
+            $srcCover   = !empty($it['cover']) ? base_url('library-image/' . $it['cover']) : base_url('assets/img/no-cover.svg');
+        ?>
+        <div class="col-12 col-xl-6 col-xxl-4 mb-4">
+            <div class="card h-100 flex-row overflow-hidden">
+                <a href="<?= $linkDetail ?>" class="flex-shrink-0 d-block" style="width:130px; background:#E2E8F0;">
+                    <img src="<?= $srcCover ?>" alt="Sampul" loading="lazy"
+                         style="width:130px; aspect-ratio:3/4; height:100%; min-height:173px; object-fit:contain; display:block;">
+                </a>
+                <div class="card-body d-flex flex-column" style="min-width:0;">
                     <span class="badge <?= $badgeKelas ?> mb-2 align-self-start"><?= $badgeNama ?></span>
-                    <h6 class="card-title"><?= esc($it['judul']) ?></h6>
+                    <h6 class="card-title" style="display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;"><?= esc($it['judul']) ?></h6>
                     <p class="card-text small text-muted mb-2"><?= esc($it['kategori'] ?? '-') ?> · <?= esc($it['tahun']) ?></p>
                     <div class="mt-auto">
-                        <?php if ($it['sumber'] === 'inovasi'): ?>
-                            <a href="<?= base_url('inovasi/' . $it['id']) ?>" class="btn btn-sm btn-outline-primary w-100">Lihat Detail</a>
-                        <?php elseif ($it['sumber'] === 'kompetisi'): ?>
-                            <a href="<?= base_url('library/kompetisi/' . $it['id']) ?>" class="btn btn-sm btn-outline-primary w-100">Lihat Detail</a>
-                        <?php else: ?>
-                            <a href="<?= base_url('library/km/' . $it['id']) ?>" class="btn btn-sm btn-outline-primary w-100">Lihat Detail</a>
-                        <?php endif; ?>
+                        <a href="<?= $linkDetail ?>" class="btn btn-sm btn-outline-primary w-100">Lihat Detail</a>
                     </div>
                 </div>
             </div>
