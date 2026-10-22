@@ -49,7 +49,7 @@
     <?= $this->renderSection('styles') ?>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container-fluid px-4">
         <a class="navbar-brand d-flex align-items-center gap-2" href="<?= base_url('dashboard') ?>">
             <img src="<?= base_url('assets/img/logo-semen-padang.png') ?>" alt="Semen Padang" style="height:32px; width:auto;">
